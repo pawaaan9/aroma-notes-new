@@ -3,12 +3,12 @@
 import { useMemo, useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import MobileFilters from "@/components/MobileFilters";
-import { SanityProduct, select100mlPrice, selectDisplayPrice, selectPrimaryImage } from "@/lib/sanity";
+import type { Product } from "@/types/product";
 import { formatLkr } from "@/utils/currency";
 
 type GenderKey = "female" | "male" | "unisex";
 
-export default function ProductsCatalog({ products }: { products: SanityProduct[] }) {
+export default function ProductsCatalog({ products }: { products: Product[] }) {
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [priceMin, setPriceMin] = useState<number | undefined>(undefined);
   const [priceMax, setPriceMax] = useState<number | undefined>(undefined);
@@ -39,7 +39,10 @@ export default function ProductsCatalog({ products }: { products: SanityProduct[
       }
 
       // Price range uses the lowest effective price among variants
-      const effective = selectDisplayPrice(p);
+      const prices = (p.variants ?? [])
+        .map((v) => v.discountPrice ?? v.price ?? null)
+        .filter((pr): pr is number => pr != null);
+      const effective = prices.length > 0 ? Math.min(...prices) : null;
       if (priceMin != null && effective != null && effective < priceMin) return false;
       if (priceMax != null && effective != null && effective > priceMax) return false;
 
@@ -187,10 +190,12 @@ export default function ProductsCatalog({ products }: { products: SanityProduct[
 
         <div className="grid grid-cols-2 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           {filteredProducts.map((product, index) => {
-            const imageSrc = selectPrimaryImage(product) ?? "/yusuf-bhai.webp";
+            const imageSrc = product.coverImageUrl ?? product.variants?.[0]?.photoUrl ?? "/yusuf-bhai.webp";
             const path = `/product-view/${product.slug?.current ?? product._id}`;
             const label = product.brand ? product.brand.toUpperCase() : undefined;
-            const { originalPrice, discountPrice } = select100mlPrice(product);
+            const target = product.variants?.find((v) => v.size?.toLowerCase().includes("100ml")) ?? product.variants?.[0] ?? null;
+            const originalPrice = target?.price ?? null;
+            const discountPrice = target?.discountPrice ?? null;
             const displayPrice = discountPrice != null ? formatLkr(discountPrice) : originalPrice != null ? formatLkr(originalPrice) : "";
             const displayOriginalPrice = discountPrice != null && originalPrice != null ? formatLkr(originalPrice) : undefined;
             return (

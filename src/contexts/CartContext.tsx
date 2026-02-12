@@ -71,6 +71,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     removeItem,
     hasItem,
     clear,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [items]);
 
   return (

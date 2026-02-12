@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import type { SanityVariant } from "@/lib/sanity";
+import type { ProductVariant as SanityVariant } from "@/types/product";
 import { formatLkr } from "@/utils/currency";
 
 type VariantSelectorProps = {

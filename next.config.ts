@@ -9,12 +9,11 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      // Sanity CDN
       {
         protocol: 'https',
-        hostname: 'cdn.sanity.io',
+        hostname: 'firebasestorage.googleapis.com',
         port: '',
-        pathname: '/images/ief0s3av/production/**',
+        pathname: '/**',
       },
     ],
   },

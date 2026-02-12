@@ -1,12 +1,8 @@
-import ProductCard from "@/components/ProductCard";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { fetchProducts, selectDisplayPrice, selectPrimaryImage, select100mlPrice } from "@/lib/sanity";
-import { formatLkr } from "@/utils/currency";
+import FeaturedProducts from "./FeaturedProducts";
 
 export default async function Home() {
-  const products = await fetchProducts();
-  const featured = products.slice(0, 8);
   return (
     <div className="flex min-h-screen w-full flex-col animate-fade-in-up">
       <div className="absolute top-0 left-0 right-0 z-50">
@@ -45,8 +41,6 @@ export default async function Home() {
           {/* Overlay Gradients (subtle dark for readability, no fog) */}
           <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/40 z-10"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent z-20"></div>
-          
-          {/* Removed decorative particles on hero for a cleaner, clearer look */}
           
           {/* Main Content */}
           <div className="absolute inset-0 z-30 flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -92,8 +86,6 @@ export default async function Home() {
         
         {/* Featured Collection Section */}
         <section id="products" className="py-20 sm:py-32 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
-          {/* Removed background clouds for a crisp light section */}
-          
           <div className="mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw] relative z-20">
             <div className="text-center mb-20">
               <div className="inline-block mb-6 px-6 py-3 bg-gradient-to-r from-amber-500/10 to-rose-500/10 rounded-full border border-amber-400/30 backdrop-blur-sm">
@@ -108,31 +100,8 @@ export default async function Home() {
               <div className="w-32 h-1 bg-gradient-to-r from-amber-500 to-rose-500 mx-auto rounded-full mt-8 animate-fade-in-up delay-500"></div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:gap-8">
-              {featured.map((p, idx) => {
-                const imageSrc = selectPrimaryImage(p) ?? "/yusuf-bhai.webp";
-                const path = `/product-view/${p.slug?.current ?? p._id}`;
-                const label = p.brand ? p.brand.toUpperCase() : undefined;
-                const { originalPrice, discountPrice } = select100mlPrice(p);
-                const displayPrice = discountPrice != null ? formatLkr(discountPrice) : (originalPrice != null ? formatLkr(originalPrice) : "");
-                const displayOriginalPrice = discountPrice != null && originalPrice != null ? formatLkr(originalPrice) : undefined;
-                return (
-                  <div key={p._id}>
-                    <ProductCard
-                      name={p.name}
-                      price={displayPrice}
-                      originalPrice={displayOriginalPrice}
-                      imageSrc={imageSrc}
-                      imageAlt={p.name}
-                      delay={`delay-${(idx + 1) * 100}`}
-                      showQuickAdd={true}
-                      href={path}
-                      label={label}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+            {/* Featured Products from DB */}
+            <FeaturedProducts />
             
             {/* Call to Action */}
             <div className="text-center mt-16 animate-fade-in-up delay-700">
@@ -148,18 +117,11 @@ export default async function Home() {
         <section id="about" className="py-20 sm:py-32 bg-white relative overflow-hidden">
           {/* Perfume Essence Background Elements */}
           <div className="absolute inset-0 overflow-hidden">
-            {/* Oud Essence Cloud */}
             <div className="absolute top-10 right-10 w-48 h-48 bg-amber-800/3 rounded-full blur-3xl animate-float-slow"></div>
             <div className="absolute top-15 right-15 w-32 h-32 bg-amber-700/2 rounded-full blur-2xl animate-float-slow delay-800"></div>
-            
-            {/* Musk Essence Cloud */}
             <div className="absolute bottom-10 left-10 w-40 h-40 bg-gray-200/3 rounded-full blur-3xl animate-float-reverse"></div>
             <div className="absolute bottom-15 left-15 w-28 h-28 bg-gray-100/2 rounded-full blur-2xl animate-float-reverse delay-500"></div>
-            
-            {/* Jasmine Essence Cloud */}
             <div className="absolute top-1/2 left-1/2 w-36 h-36 bg-white/2 rounded-full blur-3xl animate-float-slow delay-1200"></div>
-            
-            {/* Rose Essence Cloud */}
             <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-rose-200/3 rounded-full blur-3xl animate-float-reverse delay-1000"></div>
           </div>
           

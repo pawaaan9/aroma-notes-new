@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins, Smooch_Sans, Saira, Exo_2, Audiowide } from "next/font/google";
 import WhatsAppChat from "@/components/WhatsAppChat";
 import SplashScreen from "@/components/SplashScreen";
@@ -102,6 +102,9 @@ export const metadata: Metadata = {
     },
   },
   manifest: '/site.webmanifest',
+};
+
+export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#111827' },

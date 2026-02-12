@@ -308,6 +308,18 @@ label.font-saira {
   animation: slide-in-right 0.3s ease-out forwards;
 }
 
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out forwards;
+}
+
 /* Smoke Animation Keyframes */
 @keyframes smoke-drift-1 {
   0%, 100% {

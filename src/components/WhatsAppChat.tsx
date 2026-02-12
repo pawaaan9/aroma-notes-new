@@ -1,14 +1,18 @@
 "use client";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import WhatsAppLogo from "@/assets/whatsapp.png";
 
 export default function WhatsAppChat() {
+  const pathname = usePathname();
   const [isWhatsOpen, setIsWhatsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { count, items, removeItem, clear } = useCart();
+
+  if (pathname.startsWith("/an-admin")) return null;
   const whatsappNumber = "94721922332"; // Sri Lanka number
   const whatsappLink = `https://wa.me/${whatsappNumber}`;
   const toggleWhats = () => {
@@ -59,7 +63,7 @@ export default function WhatsAppChat() {
                       <div key={it.id} className="flex items-center gap-3 bg-white rounded-md p-2 border border-gray-200">
                         <div className="h-10 w-10 rounded-md overflow-hidden bg-gray-100 border border-gray-200">
                           {it.imageUrl ? (
-                            <img src={it.imageUrl} alt={it.name} className="h-full w-full object-cover" />
+                            <Image src={it.imageUrl} alt={it.name} width={40} height={40} className="h-full w-full object-cover" />
                           ) : null}
                         </div>
                         <div className="flex-1">

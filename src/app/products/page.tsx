@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Header from "../../components/Header";
 import HeroVideo from "../../components/HeroVideo";
 import Footer from "../../components/Footer";
-import { fetchProducts } from "@/lib/sanity";
-import ProductsCatalog from "@/components/ProductsCatalog";
+import ProductsLoader from "./ProductsLoader";
 
 export const metadata: Metadata = {
   title: "Shop Perfumes",
@@ -25,9 +24,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ProductsPage() {
-  const products = await fetchProducts();
-
+export default function ProductsPage() {
   return (
     <div className="flex min-h-screen w-full flex-col animate-fade-in-up">
       <div className="absolute top-0 left-0 right-0 z-50">
@@ -36,13 +33,12 @@ export default async function ProductsPage() {
       
       <main className="flex-grow relative">
         <div className="relative z-20">
-        <HeroVideo title="Shop Our Collection" subtitle="Discover artisan fragrances crafted to inspire." />
+          <HeroVideo title="Shop Our Collection" subtitle="Discover artisan fragrances crafted to inspire." />
         </div>
-        {/* Removed all smoke/particle decorative layers for clarity */}
         
         <div className="relative z-20">
           <div className="mx-auto max-w-none px-4 py-12 sm:px-6 lg:px-[5vw]">
-            <ProductsCatalog products={products} />
+            <ProductsLoader />
           </div>
         </div>
       </main>

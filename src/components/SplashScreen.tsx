@@ -8,14 +8,17 @@ export default function SplashScreen() {
   const [visible, setVisible] = useState(true);
   const pathname = usePathname();
 
+  const isAdmin = pathname.startsWith("/an-admin");
+
   // Show splash on initial load and on every route change
   useEffect(() => {
+    if (isAdmin) return;
     setVisible(true);
     const t = setTimeout(() => setVisible(false), 500);
     return () => clearTimeout(t);
-  }, [pathname]);
+  }, [pathname, isAdmin]);
 
-  if (!visible) return null;
+  if (isAdmin || !visible) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden">

@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import type { SanityProduct } from "@/lib/sanity";
+import type { Product as SanityProduct } from "@/types/product";
 import VariantSelector from "./VariantSelector";
 import MainAccordsChart from "./MainAccordsChart";
 import { useCart } from "@/contexts/CartContext";
@@ -22,7 +22,7 @@ export default function ProductDetail({ product }: Props) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 border border-gray-200" id="product-image">
+      <div className="relative aspect-square max-h-[500px] rounded-xl overflow-hidden bg-gray-100 border border-gray-200" id="product-image">
         <Image
           alt={product.name}
           src={imageSrc}
