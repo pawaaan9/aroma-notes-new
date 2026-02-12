@@ -1,0 +1,11 @@
+{
+  "name": "Aroma Notes",
+  "short_name": "AromaNotes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111827",
+  "description": "Luxury artisan fragrances imported by Aroma Notes."
+}
+
+
