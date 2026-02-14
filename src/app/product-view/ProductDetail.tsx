@@ -16,9 +16,11 @@ export default function ProductDetail({ product }: Props) {
   const [isAdding, setIsAdding] = useState(false);
   const { addItem } = useCart();
 
+  const [sizeError, setSizeError] = useState(false);
   const selected = selectedIdx >= 0 ? (variants[selectedIdx] ?? null) : null;
   const imageSrc = selected?.photoUrl || product.coverImageUrl || "/yusuf-bhai.webp";
   const allOut = useMemo(() => (variants.length > 0 && variants.every(v => v.inStock === false)), [variants]);
+  const needsSize = variants.length > 0 && selectedIdx < 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -40,7 +42,7 @@ export default function ProductDetail({ product }: Props) {
         {variants.length ? (
           <div className="mt-8">
             <h2 className="text-gray-900 font-semibold mb-3">Available</h2>
-            <VariantSelector variants={variants} value={selectedIdx} onChange={setSelectedIdx} />
+            <VariantSelector variants={variants} value={selectedIdx} onChange={(i) => { setSelectedIdx(i); setSizeError(false); }} />
           </div>
         ) : null}
 
@@ -61,10 +63,22 @@ export default function ProductDetail({ product }: Props) {
         ) : null}
 
         <div className="mt-10">
+          {sizeError && (
+            <p className="mb-2 text-sm text-red-500 font-saira animate-pulse">Please select a size first</p>
+          )}
           <button
-            disabled={allOut}
+            disabled={allOut || (selected?.inStock === false)}
             onClick={() => {
               if (allOut) return;
+              // Require size selection
+              if (needsSize) {
+                setSizeError(true);
+                setTimeout(() => setSizeError(false), 3000);
+                return;
+              }
+              // If selected variant is out of stock, don't add
+              if (selected?.inStock === false) return;
+              setSizeError(false);
               setIsAdding(true);
               try {
                 // pick selected variant metadata for cart

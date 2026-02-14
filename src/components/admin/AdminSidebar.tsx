@@ -66,6 +66,7 @@ export default function AdminSidebar({ user }: { user: User | null }) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -83,6 +84,7 @@ export default function AdminSidebar({ user }: { user: User | null }) {
   }, [mobileOpen]);
 
   const handleSignOut = async () => {
+    setShowLogoutConfirm(false);
     await signOut(auth);
     router.push("/an-admin/login");
   };
@@ -121,7 +123,7 @@ export default function AdminSidebar({ user }: { user: User | null }) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4">
         {navItems.map((item) => (
           <button
             key={item.href}
@@ -186,10 +188,8 @@ export default function AdminSidebar({ user }: { user: User | null }) {
           </div>
         )}
         <button
-          onClick={handleSignOut}
-          className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 transition-all hover:bg-red-500/10 font-saira ${
-            collapsed ? "justify-center" : ""
-          }`}
+          onClick={() => setShowLogoutConfirm(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 transition-all hover:bg-red-500/10 font-saira"
         >
           <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -235,14 +235,52 @@ export default function AdminSidebar({ user }: { user: User | null }) {
         </div>
       )}
 
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — fixed height, never scrolls with page */}
       <aside
-        className={`hidden lg:flex flex-col shrink-0 border-r border-white/10 bg-gray-900 transition-all duration-300 ${
+        className={`hidden lg:flex h-screen flex-col shrink-0 border-r border-white/10 bg-gray-900 transition-all duration-300 ${
           collapsed ? "w-[72px]" : "w-[240px]"
         }`}
       >
         {sidebarContent}
       </aside>
+
+      {/* Sign-out confirmation modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowLogoutConfirm(false)}
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-gray-900 p-6 shadow-2xl">
+            {/* Icon */}
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10">
+              <svg className="h-7 w-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </div>
+            <h3 className="text-center text-lg font-bold text-white font-saira">
+              Sign Out
+            </h3>
+            <p className="mt-2 text-center text-sm text-gray-400 font-saira">
+              Are you sure you want to sign out of the admin panel?
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-gray-300 transition-all hover:bg-white/10 hover:text-white font-saira"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white transition-all hover:bg-red-600 font-saira"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

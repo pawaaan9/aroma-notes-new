@@ -14,7 +14,9 @@ export type CartItem = {
 type CartContextValue = {
   items: CartItem[];
   count: number;
+  total: number;
   addItem: (item: Omit<CartItem, "quantity">, qty?: number) => void;
+  updateQuantity: (id: string, qty: number) => void;
   removeItem: (id: string) => void;
   hasItem: (id: string) => boolean;
   clear: () => void;
@@ -56,6 +58,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const updateQuantity: CartContextValue["updateQuantity"] = (id, qty) => {
+    if (qty <= 0) {
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      return;
+    }
+    setItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, quantity: qty } : i)),
+    );
+  };
+
   const removeItem: CartContextValue["removeItem"] = (id) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
@@ -67,7 +79,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value: CartContextValue = useMemo(() => ({
     items,
     count: items.reduce((n, it) => n + it.quantity, 0),
+    total: items.reduce((sum, it) => sum + (it.price ?? 0) * it.quantity, 0),
     addItem,
+    updateQuantity,
     removeItem,
     hasItem,
     clear,

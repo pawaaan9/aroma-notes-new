@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { onAuthStateChanged, User, updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { subscribeToSettings, saveSettings } from "@/lib/settings";
 import Image from "next/image";
 
 type Tab = "general" | "account" | "notifications";
@@ -19,6 +20,11 @@ export default function SettingsPage() {
   const [currency, setCurrency] = useState("LKR");
   const [whatsappNumber, setWhatsappNumber] = useState("");
 
+  // Delivery fee from Firestore
+  const [deliveryFee, setDeliveryFee] = useState<number>(350);
+  const [deliveryFeeLoaded, setDeliveryFeeLoaded] = useState(false);
+  const [savingDelivery, setSavingDelivery] = useState(false);
+
   // Account settings state
   const [displayName, setDisplayName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -34,6 +40,27 @@ export default function SettingsPage() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Subscribe to delivery fee from Firestore
+  useEffect(() => {
+    const unsub = subscribeToSettings((s) => {
+      setDeliveryFee(s.deliveryFee);
+      setDeliveryFeeLoaded(true);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleSaveDeliveryFee = async () => {
+    setSavingDelivery(true);
+    try {
+      await saveSettings({ deliveryFee });
+      showMessage("success", "Delivery fee updated successfully");
+    } catch {
+      showMessage("error", "Failed to update delivery fee");
+    } finally {
+      setSavingDelivery(false);
+    }
+  };
 
   const showMessage = (type: "success" | "error", text: string) => {
     setMessage({ type, text });
@@ -226,6 +253,71 @@ export default function SettingsPage() {
                 <button className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition-all hover:shadow-amber-500/30 hover:shadow-xl font-saira">
                   Save Changes
                 </button>
+              </div>
+            </div>
+
+            {/* Delivery Charges */}
+            <div className="rounded-2xl border border-white/10 bg-gray-800/50 p-6 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20">
+                  <svg className="h-5 w-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white font-saira">Delivery Charges</h2>
+                  <p className="text-xs text-gray-400 font-saira">Set the delivery fee applied to customer orders</p>
+                </div>
+              </div>
+
+              <div className="max-w-sm">
+                <label className="mb-1.5 block text-sm font-medium text-gray-300 font-saira">
+                  Delivery Fee (LKR)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-500 font-saira">
+                    LKR
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={deliveryFeeLoaded ? deliveryFee : ""}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/[^0-9]/g, "");
+                      setDeliveryFee(raw === "" ? 0 : Number(raw));
+                    }}
+                    placeholder="350"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-14 pr-4 text-sm text-white placeholder-gray-500 outline-none transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 font-saira [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-gray-500 font-saira">
+                  This amount will be added to every order at checkout. Set to 0 for free delivery.
+                </p>
+              </div>
+
+              <div className="mt-5 flex items-center gap-3">
+                <button
+                  onClick={handleSaveDeliveryFee}
+                  disabled={savingDelivery}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition-all hover:shadow-amber-500/30 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed font-saira"
+                >
+                  {savingDelivery ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Delivery Fee"
+                  )}
+                </button>
+                {deliveryFeeLoaded && (
+                  <span className="text-xs text-gray-500 font-saira">
+                    Current: {deliveryFee === 0 ? "Free delivery" : `LKR ${deliveryFee.toLocaleString()}`}
+                  </span>
+                )}
               </div>
             </div>
 

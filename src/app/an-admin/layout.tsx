@@ -63,7 +63,7 @@ export default function AdminLayout({
 
   // Authenticated admin layout with sidebar
   return (
-    <div className="flex min-h-screen bg-gray-900 text-white">
+    <div className="flex h-screen overflow-hidden bg-gray-900 text-white">
       <AdminSidebar user={user} />
       <main className="flex-1 overflow-y-auto">
         {children}

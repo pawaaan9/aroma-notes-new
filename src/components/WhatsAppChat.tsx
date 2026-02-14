@@ -87,26 +87,32 @@ export default function WhatsAppChat() {
                 {items.length === 0 ? (
                   <a
                     href="/products"
-                    className="mt-4 w-full bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-lg py-3 px-4 font-semibold hover:shadow-lg transition-all duration-300 text-center font-saira uppercase"
+                    className="mt-4 w-full bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-lg py-3 px-4 font-semibold hover:shadow-lg transition-all duration-300 text-center font-saira uppercase block"
                   >
                     Browse Products
                   </a>
                 ) : (
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => clear()}
-                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg py-3 px-4 font-semibold transition-all duration-200 text-center font-saira uppercase border border-gray-300"
-                    >
-                      Clear
-                    </button>
+                  <div className="mt-4 space-y-2">
                     <a
-                      href={whatsappLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 px-4 font-semibold transition-all duration-200 text-center font-saira uppercase"
+                      href="/checkout"
+                      className="w-full bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white rounded-lg py-3 px-4 font-semibold transition-all duration-200 text-center font-saira uppercase block"
                     >
-                      WhatsApp
+                      Checkout
                     </a>
+                    <div className="grid grid-cols-2 gap-2">
+                      <a
+                        href="/cart"
+                        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg py-2.5 px-4 font-semibold transition-all duration-200 text-center font-saira text-sm border border-gray-300 block"
+                      >
+                        View Cart
+                      </a>
+                      <button
+                        onClick={() => clear()}
+                        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg py-2.5 px-4 font-semibold transition-all duration-200 text-center font-saira text-sm border border-gray-300"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
