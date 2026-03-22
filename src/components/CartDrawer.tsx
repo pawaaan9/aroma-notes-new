@@ -5,21 +5,28 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useCartDrawer } from "@/contexts/CartDrawerContext";
-import { fetchSettings } from "@/lib/settings";
+import { fetchAllProducts } from "@/lib/firestore-products";
 import { formatLkr } from "@/utils/currency";
+import type { Product } from "@/types/product";
 
 export default function CartDrawer() {
   const { isOpen, close } = useCartDrawer();
   const { items, count, total, removeItem, clear } = useCart();
-  const [deliveryFeeConfig, setDeliveryFeeConfig] = useState<number | null>(null);
+  const [suggestions, setSuggestions] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetchSettings().then((s) => setDeliveryFeeConfig(s.deliveryFee));
-  }, []);
-
-  const DELIVERY_FEE = deliveryFeeConfig ?? 350;
-  const deliveryFee = total > 0 ? DELIVERY_FEE : 0;
-  const grandTotal = total + deliveryFee;
+    if (isOpen && items.length > 0) {
+      fetchAllProducts().then((all) => {
+        const cartIds = new Set(items.map((i) => i.id.split(":")[0]));
+        const suggested = all
+          .filter((p) => !cartIds.has(p._id))
+          .slice(0, 4);
+        setSuggestions(suggested);
+      }).catch(console.error);
+    } else {
+      setSuggestions([]);
+    }
+  }, [isOpen, items]);
 
   useEffect(() => {
     const onEscape = (e: KeyboardEvent) => {
@@ -39,16 +46,16 @@ export default function CartDrawer() {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - blur on left shows content */}
       <div
-        className="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-[200] bg-black/25 backdrop-blur-md transition-opacity"
         onClick={close}
         aria-hidden
       />
 
-      {/* Drawer panel - slides from right */}
+      {/* Drawer panel - slides from right, flush right, free space on left */}
       <div
-        className="fixed top-0 right-0 bottom-0 z-[201] w-full max-w-md bg-white shadow-2xl flex flex-col animate-slide-in-right"
+        className="fixed top-0 right-0 bottom-0 z-[201] w-[min(85vw,380px)] bg-white shadow-2xl flex flex-col rounded-tl-2xl rounded-bl-2xl overflow-hidden animate-slide-in-right"
         role="dialog"
         aria-modal="true"
         aria-label="Shopping cart"
@@ -138,31 +145,52 @@ export default function CartDrawer() {
           )}
         </div>
 
-        {/* Footer - totals & actions */}
+        {/* Footer - suggestions, totals & actions */}
         {items.length > 0 && (
           <div className="border-t border-gray-200 bg-white p-4 shrink-0 space-y-3">
+            {/* Suggestions - above subtotal */}
+            {suggestions.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold tracking-wider text-gray-600 uppercase mb-2">You may also like</p>
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {suggestions.map((p) => {
+                    const imageSrc = p.coverImageUrl ?? p.variants?.[0]?.photoUrl ?? "/yusuf-bhai.webp";
+                    const href = `/product-view/${p.slug?.current ?? p._id}`;
+                    const price = p.variants?.[0]?.discountPrice ?? p.variants?.[0]?.price;
+                    return (
+                      <Link
+                        key={p._id}
+                        href={href}
+                        onClick={close}
+                        className="flex-shrink-0 w-20 group"
+                      >
+                        <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                          <Image
+                            src={imageSrc}
+                            alt={p.name}
+                            width={80}
+                            height={80}
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        </div>
+                        <p className="text-[10px] font-medium text-gray-900 truncate mt-1">{p.name}</p>
+                        {price != null && (
+                          <p className="text-[10px] font-semibold text-primary">{formatLkr(price)}</p>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1 text-sm font-saira">
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-base font-bold text-gray-900">
                 <span>Subtotal</span>
                 <span>{formatLkr(total)}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Delivery</span>
-                <span>{formatLkr(deliveryFee)}</span>
-              </div>
-              <div className="flex justify-between text-base font-bold text-gray-900 pt-2">
-                <span>Total</span>
-                <span>{formatLkr(grandTotal)}</span>
-              </div>
             </div>
             <div className="space-y-2">
-              <Link
-                href="/checkout"
-                onClick={close}
-                className="block w-full py-3 px-4 rounded-lg bg-gray-900 text-white font-saira font-semibold text-center hover:bg-gray-800 transition-colors uppercase"
-              >
-                Checkout
-              </Link>
               <div className="grid grid-cols-2 gap-2">
                 <Link
                   href="/cart"
@@ -179,6 +207,14 @@ export default function CartDrawer() {
                 </button>
               </div>
             </div>
+
+            <Link
+              href="/checkout"
+              onClick={close}
+              className="block w-full py-3 px-4 rounded-lg bg-gray-900 text-white font-saira font-semibold text-center hover:bg-gray-800 transition-colors uppercase"
+            >
+              Checkout
+            </Link>
           </div>
         )}
       </div>

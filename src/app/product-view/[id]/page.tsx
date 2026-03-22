@@ -33,7 +33,7 @@ export default function ProductViewPage() {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="absolute top-0 left-0 right-0 z-50">
-        <Header currentPage="products" dark />
+        <Header currentPage="products" />
       </div>
       <main className="flex-grow bg-perfume-gradient bg-perfume-paper pt-28 pb-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">

@@ -1,20 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useCartDrawer } from "@/contexts/CartDrawerContext";
+import { fetchAllProducts } from "@/lib/firestore-products";
+import { formatLkr } from "@/utils/currency";
+import type { Product } from "@/types/product";
 
 interface HeaderProps {
   currentPage?: 'home' | 'products' | 'about';
-  dark?: boolean; // when true, use dark text (black) for header words
+  dark?: boolean;
 }
 
 export default function Header({ currentPage = 'home', dark = false }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { count } = useCart();
   const { open: openCart } = useCartDrawer();
 
@@ -31,59 +38,92 @@ export default function Header({ currentPage = 'home', dark = false }: HeaderPro
     setIsMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (isSearchExpanded) {
+      fetchAllProducts().then(setProducts).catch(console.error);
+      searchInputRef.current?.focus();
+    } else {
+      setSearchQuery("");
+    }
+  }, [isSearchExpanded]);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return products.slice(0, 6);
+    const q = searchQuery.toLowerCase().trim();
+    return products.filter(
+      (p) =>
+        (p.name ?? "").toLowerCase().includes(q) ||
+        (p.brand ?? "").toLowerCase().includes(q)
+    );
+  }, [products, searchQuery]);
+
+  const getPrice = (p: Product) => {
+    const prices = (p.variants ?? [])
+      .map((v) => v.discountPrice ?? v.price ?? null)
+      .filter((pr): pr is number => pr != null);
+    return prices.length > 0 ? Math.min(...prices) : null;
+  };
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
   const headerBg = dark
     ? (scrolled ? 'bg-white/98 shadow-lg' : 'bg-white/95 shadow-sm')
     : scrolled ? 'bg-black/90 shadow-md' : 'bg-black/30';
 
-  // Prevent hydration mismatch by not rendering until mounted
+  const linkClass = (page: string) =>
+    `block text-xl font-medium font-saira uppercase tracking-wider py-4 border-b border-gray-200 last:border-0 ${currentPage === page ? 'text-primary' : 'text-gray-800'} hover:text-primary transition-colors`;
+
+  const navLinkClass = (page: string) =>
+    `text-sm font-medium font-saira uppercase tracking-[0.2em] ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-colors ${currentPage === page ? 'text-primary' : ''}`;
+  const iconClass = dark ? 'text-gray-900' : 'text-white';
+
+  const closeSearch = () => {
+    setIsSearchExpanded(false);
+    setSearchQuery("");
+  };
+
   if (!isMounted) {
     return (
       <header className={`fixed top-0 left-0 right-0 z-[100] w-full backdrop-blur-md transition-all duration-300 ${headerBg}`}>
-         <div className="container mx-auto flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10 gap-4">
-          {/* Left: Logo */}
-          <Link className="flex shrink-0 items-center gap-2 sm:gap-3 group" href="/">
-            <Image src="/logo-2.png" alt="Aroma Notes Logo" width={40} height={40} className="h-9 w-9 sm:h-12 sm:w-12" priority />
-            <h1 className={`text-lg sm:text-xl font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'} transition-all duration-300 group-hover:text-primary`}>
-              Aroma Notes
-            </h1>
-          </Link>
-
-          {/* Center: Desktop Nav */}
-          <nav className="hidden flex-1 justify-center items-center gap-6 lg:gap-8 md:flex">
-            <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/">
-              <span className="relative z-10">Home</span>
-              <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'home' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
+        <div className="flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10 h-14">
+          <div className="flex items-center shrink-0 md:min-w-0">
+            <Link className="hidden md:flex items-center gap-2 group" href="/">
+              <Image src="/logo-2.png" alt="Aroma Notes Logo" width={40} height={40} className="h-10 w-10" priority />
+              <h1 className={`text-xl font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'}`}>Aroma Notes</h1>
             </Link>
-            <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/products">
-              <span className="relative z-10">Products</span>
-              <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'products' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
-            </Link>
-            <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/about">
-              <span className="relative z-10">About</span>
-              <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'about' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
-            </Link>
+            <button className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg" aria-label="Open menu">
+              <svg className={`w-6 h-6 ${iconClass}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+          <nav className="hidden md:flex flex-1 justify-center items-center gap-8 lg:gap-12">
+            <Link className={navLinkClass("home")} href="/">Home</Link>
+            <Link className={navLinkClass("products")} href="/products">Products</Link>
+            <Link className={navLinkClass("about")} href="/about">About</Link>
           </nav>
-
-          {/* Right: Search + Bag + Mobile Menu */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <Link href="/products" className={`p-2 rounded-lg transition-colors hover:opacity-80 ${dark ? 'text-gray-900' : 'text-white'}`} aria-label="Search products">
-              <svg className="w-5 h-5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Link className="md:hidden absolute left-[calc(50%-20px)] top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2" href="/">
+            <Image src="/logo-2.png" alt="Aroma Notes Logo" width={36} height={36} className="h-9 w-9" priority />
+            <h1 className={`text-lg font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'}`}>Aroma Notes</h1>
+          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            <button className={`p-2 rounded-lg ${iconClass}`} aria-label="Search products">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-            </Link>
-            <button onClick={openCart} className={`relative p-2 rounded-lg transition-colors hover:opacity-80 ${dark ? 'text-gray-900' : 'text-white'}`} aria-label="Open cart" id="cart-header-bag">
-              <svg className="w-5 h-5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              {count > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center">
-                  {count > 99 ? "99+" : count}
-                </span>
-              )}
             </button>
-            <button className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10 transition-colors" onClick={toggleMobileMenu} aria-label="Toggle menu">
-              <svg className={`w-5 h-5 ${dark ? 'text-gray-900' : 'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <button className={`relative p-2 rounded-lg ${iconClass}`} aria-label="Open cart" id="cart-header-bag">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
             </button>
           </div>
@@ -93,93 +133,156 @@ export default function Header({ currentPage = 'home', dark = false }: HeaderPro
   }
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-[100] w-full backdrop-blur-md transition-all duration-300 ${headerBg}`}>
-       <div className="container mx-auto flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10 gap-4">
-        {/* Left: Logo */}
-        <Link className="flex shrink-0 items-center gap-2 sm:gap-3 group" href="/">
-          <Image src="/logo-2.png" alt="Aroma Notes Logo" width={40} height={40} className="h-9 w-9 sm:h-12 sm:w-12" priority />
-          <h1 className={`text-lg sm:text-xl font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'} transition-all duration-300 group-hover:text-primary`}>
-            Aroma Notes
-          </h1>
-        </Link>
+    <>
+      <header className={`fixed top-0 left-0 right-0 z-[100] w-full backdrop-blur-md transition-all duration-300 ${headerBg}`}>
+        <div className="flex flex-col">
+          {/* Main nav row */}
+          <div className="flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10 h-14">
+            <div className="flex items-center shrink-0 md:min-w-0">
+              <Link className="hidden md:flex items-center gap-2 group" href="/">
+                <Image src="/logo-2.png" alt="Aroma Notes Logo" width={40} height={40} className="h-10 w-10" priority />
+                <h1 className={`text-xl font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'}`}>Aroma Notes</h1>
+              </Link>
+              <button
+                className={`md:hidden flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${dark ? 'hover:bg-gray-200/50' : 'hover:bg-white/10'}`}
+                onClick={toggleMobileMenu}
+                aria-label="Open menu"
+              >
+                <svg className={`w-6 h-6 ${iconClass}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
 
-        {/* Center: Desktop Nav */}
-        <nav className="hidden flex-1 justify-center items-center gap-6 lg:gap-8 md:flex">
-          <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/">
-            <span className="relative z-10">Home</span>
-            <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'home' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
-          </Link>
-          <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/products">
-            <span className="relative z-10">Products</span>
-            <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'products' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
-          </Link>
-          <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/about">
-            <span className="relative z-10">About</span>
-            <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'about' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
-          </Link>
-        </nav>
+            {/* Center: Nav links */}
+            <nav className="hidden md:flex flex-1 justify-center items-center gap-8 lg:gap-12">
+              <Link className={navLinkClass("home")} href="/">Home</Link>
+              <Link className={navLinkClass("products")} href="/products">Products</Link>
+              <Link className={navLinkClass("about")} href="/about">About</Link>
+            </nav>
 
-        {/* Right: Search + Bag + Mobile Menu */}
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          <Link href="/products" className={`p-2 rounded-lg transition-colors hover:opacity-80 ${dark ? 'text-gray-900' : 'text-white'}`} aria-label="Search products">
-            <svg className="w-5 h-5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </Link>
-          <button onClick={openCart} className={`relative p-2 rounded-lg transition-colors hover:opacity-80 ${dark ? 'text-gray-900' : 'text-white'}`} aria-label="Open cart" id="cart-header-bag">
-            <svg className="w-5 h-5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-            {count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center">
-                {count > 99 ? "99+" : count}
-              </span>
-            )}
-          </button>
-          <button className={`md:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10 transition-colors ${dark ? 'hover:bg-gray-200' : ''}`} onClick={toggleMobileMenu} aria-label="Toggle menu">
-            <svg className={`w-5 h-5 transition-transform duration-300 ${isMounted && isMobileMenuOpen ? 'rotate-90' : ''} ${dark ? 'text-gray-900' : 'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {isMounted && isMobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
-        </div>
-      </div>
+            <Link className="md:hidden absolute left-[calc(50%-20px)] top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2" href="/">
+              <Image src="/logo-2.png" alt="Aroma Notes Logo" width={36} height={36} className="h-9 w-9" priority />
+              <h1 className={`text-lg font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'}`}>Aroma Notes</h1>
+            </Link>
 
-      {/* Simple Mobile Navigation Menu */}
-      {isMounted && (
-        <div className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${
-          isMobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
-        }`}>
-        <div className="bg-white/90 backdrop-blur-md border-t border-gray-200 font-saira uppercase">
-          <nav className="container mx-auto px-4 py-4 space-y-3">
-            <Link 
-              className={`block text-base font-medium font-saira text-gray-700 hover:text-primary transition-all duration-300 py-3 px-4 rounded-lg hover:bg-primary/10 ${currentPage === 'home' ? 'bg-primary/10 text-primary border-l-4 border-primary' : ''}`}
-              href="/"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
-              className={`block text-base font-medium font-saira text-gray-700 hover:text-primary transition-all duration-300 py-3 px-4 rounded-lg hover:bg-primary/10 ${currentPage === 'products' ? 'bg-primary/10 text-primary border-l-4 border-primary' : ''}`}
-              href="/products"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Products
-            </Link>
-            <Link 
-              className={`block text-base font-medium font-saira text-gray-700 hover:text-primary transition-all duration-300 py-3 px-4 rounded-lg hover:bg-primary/10 ${currentPage === 'about' ? 'bg-primary/10 text-primary border-l-4 border-primary' : ''}`}
-              href="/about"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-          </nav>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsSearchExpanded((prev) => !prev)}
+                className={`p-2 rounded-lg transition-colors hover:opacity-80 ${iconClass} ${isSearchExpanded ? 'opacity-100' : ''}`}
+                aria-label="Search products"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+              <button onClick={openCart} className={`relative p-2 rounded-lg transition-colors hover:opacity-80 ${iconClass}`} aria-label="Open cart" id="cart-header-bag">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                {count > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center">
+                    {count > 99 ? "99+" : count}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Expanded search row - type area + results dropdown */}
+          {isSearchExpanded && (
+            <div className="border-t border-white/10 md:border-gray-200/50 px-4 py-3">
+              <div className="relative w-full max-w-2xl mx-auto">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    ref={searchInputRef}
+                    type="search"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 py-2.5 bg-white/95 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 px-4 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-saira"
+                  />
+                  <button
+                    onClick={closeSearch}
+                    className="p-2 text-gray-500 hover:text-gray-800 rounded"
+                    aria-label="Close search"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                {/* Results dropdown */}
+                {(searchResults.length > 0 || searchQuery.trim()) && (
+                  <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-lg shadow-xl border border-gray-200 max-h-80 overflow-y-auto z-[110]">
+                    {searchResults.length > 0 ? searchResults.map((p) => {
+                      const imageSrc = p.coverImageUrl ?? p.variants?.[0]?.photoUrl ?? "/yusuf-bhai.webp";
+                      const href = `/product-view/${p.slug?.current ?? p._id}`;
+                      const price = getPrice(p);
+                      return (
+                        <Link
+                          key={p._id}
+                          href={href}
+                          onClick={closeSearch}
+                          className="flex gap-3 p-3 hover:bg-gray-50 border-b border-gray-100 last:border-0"
+                        >
+                          <div className="h-12 w-12 rounded overflow-hidden bg-gray-100 shrink-0">
+                            <Image src={imageSrc} alt={p.name} width={48} height={48} className="h-full w-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 truncate text-sm">{p.name}</p>
+                            {p.brand && <p className="text-xs text-gray-500 truncate">{p.brand}</p>}
+                            {price != null && <p className="text-xs font-medium text-primary mt-0.5">{formatLkr(price)}</p>}
+                          </div>
+                        </Link>
+                      );
+                    }) : (
+                      <p className="p-4 text-center text-gray-500 text-sm font-saira">No products match your search.</p>
+                    )}
+                    <Link
+                      href={searchQuery.trim() ? `/products?q=${encodeURIComponent(searchQuery.trim())}` : "/products"}
+                      onClick={closeSearch}
+                      className="block p-3 text-center text-sm font-medium text-primary hover:bg-gray-50"
+                    >
+                      View all products
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-        </div>
+      </header>
+
+      {/* Mobile menu drawer */}
+      {isMobileMenuOpen && (
+        <>
+          <div className="fixed inset-0 z-[150] bg-black/25 backdrop-blur-md" onClick={toggleMobileMenu} aria-hidden />
+          <aside
+            className="fixed top-0 left-0 bottom-0 z-[151] w-[min(85vw,380px)] bg-white shadow-2xl flex flex-col rounded-tr-2xl rounded-r-xl animate-slide-in-left"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+          >
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-bold font-saira uppercase text-gray-900">Menu</h2>
+              <button onClick={toggleMobileMenu} className="p-2 -m-2 text-gray-500 hover:text-gray-800 rounded-lg" aria-label="Close menu">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex-1 px-4 py-6">
+              <Link href="/" className={linkClass("home")} onClick={toggleMobileMenu}>Home</Link>
+              <Link href="/products" className={linkClass("products")} onClick={toggleMobileMenu}>Products</Link>
+              <Link href="/about" className={linkClass("about")} onClick={toggleMobileMenu}>About</Link>
+            </nav>
+          </aside>
+        </>
       )}
-    </header>
+    </>
   );
 }

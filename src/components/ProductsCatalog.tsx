@@ -8,7 +8,7 @@ import { formatLkr } from "@/utils/currency";
 
 type GenderKey = "female" | "male" | "unisex";
 
-export default function ProductsCatalog({ products }: { products: Product[] }) {
+export default function ProductsCatalog({ products, searchQuery = "" }: { products: Product[]; searchQuery?: string }) {
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [priceMin, setPriceMin] = useState<number | undefined>(undefined);
   const [priceMax, setPriceMax] = useState<number | undefined>(undefined);
@@ -22,6 +22,15 @@ export default function ProductsCatalog({ products }: { products: Product[] }) {
     ) as Array<"originals" | "inspired">;
 
     return products.filter((p) => {
+      // Search by name/brand
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesSearch =
+          (p.name ?? "").toLowerCase().includes(q) ||
+          (p.brand ?? "").toLowerCase().includes(q);
+        if (!matchesSearch) return false;
+      }
+
       // Availability
       if (inStockOnly) {
         const anyInStock = (p.variants ?? []).some((v) => v.inStock === true);
@@ -48,7 +57,7 @@ export default function ProductsCatalog({ products }: { products: Product[] }) {
 
       return true;
     });
-  }, [products, inStockOnly, gender, perfumeType, priceMin, priceMax]);
+  }, [products, searchQuery, inStockOnly, gender, perfumeType, priceMin, priceMax]);
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">

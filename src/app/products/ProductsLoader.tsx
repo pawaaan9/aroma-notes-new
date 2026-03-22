@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { fetchAllProducts } from "@/lib/firestore-products";
 import ProductsCatalog from "@/components/ProductsCatalog";
 import type { Product } from "@/types/product";
 
 export default function ProductsLoader() {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("q") ?? "";
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,5 +41,5 @@ export default function ProductsLoader() {
     );
   }
 
-  return <ProductsCatalog products={products} />;
+  return <ProductsCatalog products={products} searchQuery={searchQuery} />;
 }
