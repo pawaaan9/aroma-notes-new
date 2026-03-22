@@ -5,19 +5,27 @@ import { useParams } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductDetail from "../ProductDetail";
-import { fetchProductByIdOrSlug } from "@/lib/firestore-products";
+import ProductCard from "@/components/ProductCard";
+import { fetchProductByIdOrSlug, fetchRelatedProducts } from "@/lib/firestore-products";
+import { formatLkr } from "@/utils/currency";
 import type { Product } from "@/types/product";
 
 export default function ProductViewPage() {
   const params = useParams();
   const id = params?.id as string;
   const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
+    setLoading(true);
     fetchProductByIdOrSlug(id)
-      .then(setProduct)
+      .then((p) => {
+        setProduct(p);
+        if (p) fetchRelatedProducts(p, 6).then(setRelatedProducts);
+        else setRelatedProducts([]);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [id]);
@@ -27,7 +35,7 @@ export default function ProductViewPage() {
       <div className="absolute top-0 left-0 right-0 z-50">
         <Header currentPage="products" dark />
       </div>
-      <main className="flex-grow bg-white pt-28 pb-16">
+      <main className="flex-grow bg-perfume-gradient bg-perfume-paper pt-28 pb-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           {loading ? (
             <div className="flex items-center justify-center py-20">
@@ -40,7 +48,42 @@ export default function ProductViewPage() {
               </div>
             </div>
           ) : product ? (
-            <ProductDetail product={product} />
+            <>
+              <ProductDetail product={product} />
+
+              {relatedProducts.length > 0 && (
+                <section className="mt-16 pt-12 border-t border-amber-200/30">
+                  <h2 className="text-xl font-bold text-gray-900 font-saira mb-8">You may also like</h2>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+                    {relatedProducts.map((p, index) => {
+                      const imageSrc = p.coverImageUrl ?? p.variants?.[0]?.photoUrl ?? "/yusuf-bhai.webp";
+                      const path = `/product-view/${p.slug?.current ?? p._id}`;
+                      const label = p.brand ? p.brand.toUpperCase() : undefined;
+                      const target = p.variants?.find((v) => v.size?.toLowerCase().includes("100ml")) ?? p.variants?.[0] ?? null;
+                      const originalPrice = target?.price ?? null;
+                      const discountPrice = target?.discountPrice ?? null;
+                      const displayPrice = discountPrice != null ? formatLkr(discountPrice) : originalPrice != null ? formatLkr(originalPrice) : "";
+                      const displayOriginalPrice = discountPrice != null && originalPrice != null ? formatLkr(originalPrice) : undefined;
+                      return (
+                        <div key={p._id}>
+                          <ProductCard
+                            name={p.name}
+                            price={displayPrice}
+                            originalPrice={displayOriginalPrice}
+                            imageSrc={imageSrc}
+                            imageAlt={p.name}
+                            delay={`delay-${(index + 1) * 100}`}
+                            showQuickAdd
+                            href={path}
+                            label={label}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+            </>
           ) : (
             <div className="flex items-center justify-center py-20">
               <p className="text-gray-400 font-saira">Product not found.</p>

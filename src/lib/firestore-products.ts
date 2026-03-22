@@ -32,6 +32,23 @@ export async function fetchAllProducts(): Promise<Product[]> {
 }
 
 /**
+ * Fetch related products (same brand, type, or gender) excluding the current one.
+ */
+export async function fetchRelatedProducts(currentProduct: Product, limit = 6): Promise<Product[]> {
+  const all = await fetchAllProducts();
+  const filtered = all.filter((p) => p._id !== currentProduct._id);
+  const scored = filtered.map((p) => {
+    let score = 0;
+    if (currentProduct.brand && p.brand && p.brand.toLowerCase() === currentProduct.brand.toLowerCase()) score += 3;
+    if (currentProduct.perfumeType && p.perfumeType === currentProduct.perfumeType) score += 2;
+    if (currentProduct.gender && p.gender === currentProduct.gender) score += 1;
+    return { product: p, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map((s) => s.product);
+}
+
+/**
  * Fetch a single product by its Firestore document ID or slug.
  */
 export async function fetchProductByIdOrSlug(idOrSlug: string): Promise<Product | null> {
