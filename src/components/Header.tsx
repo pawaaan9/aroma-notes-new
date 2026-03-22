@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "@/contexts/CartContext";
+import { useCartDrawer } from "@/contexts/CartDrawerContext";
 
 interface HeaderProps {
   currentPage?: 'home' | 'products' | 'about';
@@ -13,6 +15,8 @@ export default function Header({ currentPage = 'home', dark = false }: HeaderPro
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { count } = useCart();
+  const { open: openCart } = useCartDrawer();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -35,59 +39,54 @@ export default function Header({ currentPage = 'home', dark = false }: HeaderPro
   if (!isMounted) {
     return (
       <header className={`fixed top-0 left-0 right-0 z-[100] w-full backdrop-blur-md transition-all duration-300 ${headerBg}`}>
-         <div className="container mx-auto flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10">
-          {/* Enhanced Logo */}
-          <Link className="flex h-full items-center gap-3 group" href="/">
-            <div className="relative">
-              <Image
-                src="/logo-2.png"
-                alt="Aroma Notes Logo"
-                width={48}
-                height={48}
-                className="h-12 w-12"
-                priority
-              />
-            </div>
-            <div className="relative">
-              <h1 className={`text-xl font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'} transition-all duration-300 group-hover:text-primary`}>
-                Aroma Notes
-              </h1>
-            <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-          </div>
-        </Link>
+         <div className="container mx-auto flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10 gap-4">
+          {/* Left: Logo */}
+          <Link className="flex shrink-0 items-center gap-2 sm:gap-3 group" href="/">
+            <Image src="/logo-2.png" alt="Aroma Notes Logo" width={40} height={40} className="h-9 w-9 sm:h-12 sm:w-12" priority />
+            <h1 className={`text-lg sm:text-xl font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'} transition-all duration-300 group-hover:text-primary`}>
+              Aroma Notes
+            </h1>
+          </Link>
 
-          {/* Enhanced Desktop Navigation */}
-          <nav className="hidden items-center gap-8 md:flex">
-            <Link className={`text-sm font-medium font-saira uppercase ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-3 py-2 rounded-lg`} href="/">
-              <span className="relative z-10 transition-all duration-300 group-hover:scale-105">Home</span>
+          {/* Center: Desktop Nav */}
+          <nav className="hidden flex-1 justify-center items-center gap-6 lg:gap-8 md:flex">
+            <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/">
+              <span className="relative z-10">Home</span>
               <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'home' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
             </Link>
-            <Link className={`text-sm font-medium font-saira uppercase ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-3 py-2 rounded-lg`} href="/products">
-              <span className="relative z-10 transition-all duration-300 group-hover:scale-105">Products</span>
+            <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/products">
+              <span className="relative z-10">Products</span>
               <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'products' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
             </Link>
-            <Link className={`text-sm font-medium font-saira uppercase ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-3 py-2 rounded-lg`} href="/about">
-              <span className="relative z-10 transition-all duration-300 group-hover:scale-105">About</span>
+            <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/about">
+              <span className="relative z-10">About</span>
               <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'about' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
             </Link>
           </nav>
 
-
-          {/* Simple Mobile Menu Button */}
-          <button 
-            className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-all duration-300 border border-primary/30"
-            onClick={toggleMobileMenu}
-            aria-label="Toggle mobile menu"
-          >
-            <svg 
-              className="w-6 h-6 transition-transform duration-300" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+          {/* Right: Search + Bag + Mobile Menu */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <Link href="/products" className={`p-2 rounded-lg transition-colors hover:opacity-80 ${dark ? 'text-gray-900' : 'text-white'}`} aria-label="Search products">
+              <svg className="w-5 h-5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </Link>
+            <button onClick={openCart} className={`relative p-2 rounded-lg transition-colors hover:opacity-80 ${dark ? 'text-gray-900' : 'text-white'}`} aria-label="Open cart" id="cart-header-bag">
+              <svg className="w-5 h-5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {count > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center">
+                  {count > 99 ? "99+" : count}
+                </span>
+              )}
+            </button>
+            <button className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10 transition-colors" onClick={toggleMobileMenu} aria-label="Toggle menu">
+              <svg className={`w-5 h-5 ${dark ? 'text-gray-900' : 'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
     );
@@ -95,63 +94,58 @@ export default function Header({ currentPage = 'home', dark = false }: HeaderPro
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-[100] w-full backdrop-blur-md transition-all duration-300 ${headerBg}`}>
-       <div className="container mx-auto flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10">
-        {/* Enhanced Logo */}
-        <Link className="flex h-full items-center gap-3 group" href="/">
-          <div className="relative">
-            <Image
-              src="/logo-2.png"
-              alt="Aroma Notes Logo"
-              width={48}
-              height={48}
-              className="h-12 w-12"
-              priority
-            />
-          </div>
-          <div className="relative">
-            <h1 className={`text-xl font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'} transition-all duration-300 group-hover:text-primary`}>
-              Aroma Notes
-            </h1>
-            <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-          </div>
+       <div className="container mx-auto flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10 gap-4">
+        {/* Left: Logo */}
+        <Link className="flex shrink-0 items-center gap-2 sm:gap-3 group" href="/">
+          <Image src="/logo-2.png" alt="Aroma Notes Logo" width={40} height={40} className="h-9 w-9 sm:h-12 sm:w-12" priority />
+          <h1 className={`text-lg sm:text-xl font-bold font-audiowide tracking-wide ${dark ? 'text-gray-900' : 'text-white'} transition-all duration-300 group-hover:text-primary`}>
+            Aroma Notes
+          </h1>
         </Link>
 
-        {/* Enhanced Desktop Navigation */}
-        <nav className="hidden items-center gap-8 md:flex">
-          <Link className={`text-sm font-medium font-saira uppercase ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-3 py-2 rounded-lg`} href="/">
-            <span className="relative z-10 transition-all duration-300 group-hover:scale-105">Home</span>
+        {/* Center: Desktop Nav */}
+        <nav className="hidden flex-1 justify-center items-center gap-6 lg:gap-8 md:flex">
+          <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/">
+            <span className="relative z-10">Home</span>
             <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'home' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
           </Link>
-          <Link className={`text-sm font-medium font-saira uppercase ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-3 py-2 rounded-lg`} href="/products">
-            <span className="relative z-10 transition-all duration-300 group-hover:scale-105">Products</span>
+          <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/products">
+            <span className="relative z-10">Products</span>
             <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'products' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
           </Link>
-          <Link className={`text-sm font-medium font-saira uppercase ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-3 py-2 rounded-lg`} href="/about">
-            <span className="relative z-10 transition-all duration-300 group-hover:scale-105">About</span>
+          <Link className={`text-xs sm:text-sm font-medium font-saira uppercase tracking-wider ${dark ? 'text-gray-900' : 'text-white'} hover:text-primary transition-all duration-300 relative group px-2 py-2`} href="/about">
+            <span className="relative z-10">About</span>
             <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-orange-600 transform transition-transform duration-300 origin-center ${currentPage === 'about' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></div>
           </Link>
         </nav>
 
-
-        {/* Simple Mobile Menu Button */}
-        <button 
-          className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-all duration-300 border border-primary/30"
-          onClick={toggleMobileMenu}
-          aria-label="Toggle mobile menu"
-        >
-          <svg 
-            className={`w-6 h-6 transition-transform duration-300 ${isMounted && isMobileMenuOpen ? 'rotate-90' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            {isMounted && isMobileMenuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        {/* Right: Search + Bag + Mobile Menu */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <Link href="/products" className={`p-2 rounded-lg transition-colors hover:opacity-80 ${dark ? 'text-gray-900' : 'text-white'}`} aria-label="Search products">
+            <svg className="w-5 h-5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </Link>
+          <button onClick={openCart} className={`relative p-2 rounded-lg transition-colors hover:opacity-80 ${dark ? 'text-gray-900' : 'text-white'}`} aria-label="Open cart" id="cart-header-bag">
+            <svg className="w-5 h-5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            {count > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center">
+                {count > 99 ? "99+" : count}
+              </span>
             )}
-          </svg>
-        </button>
+          </button>
+          <button className={`md:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10 transition-colors ${dark ? 'hover:bg-gray-200' : ''}`} onClick={toggleMobileMenu} aria-label="Toggle menu">
+            <svg className={`w-5 h-5 transition-transform duration-300 ${isMounted && isMobileMenuOpen ? 'rotate-90' : ''} ${dark ? 'text-gray-900' : 'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isMounted && isMobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Simple Mobile Navigation Menu */}

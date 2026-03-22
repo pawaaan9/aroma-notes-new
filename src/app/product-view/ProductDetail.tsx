@@ -89,7 +89,7 @@ export default function ProductDetail({ product }: Props) {
               } catch {}
               // fly-to-cart animation
               const srcEl = document.getElementById("product-image");
-              const cartFab = document.getElementById("cart-fab");
+              const cartFab = document.getElementById("cart-header-bag");
               if (srcEl && cartFab) {
                 const srcRect = srcEl.getBoundingClientRect();
                 const dstRect = cartFab.getBoundingClientRect();

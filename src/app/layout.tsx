@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Poppins, Smooch_Sans, Saira, Exo_2, Audiowide } from "next/font/google";
 import WhatsAppChat from "@/components/WhatsAppChat";
 import SplashScreen from "@/components/SplashScreen";
+import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
+import { CartDrawerProvider } from "@/contexts/CartDrawerContext";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -131,9 +133,12 @@ export default function RootLayout({
         </div>
         <div className="relative z-10">
           <CartProvider>
-            <SplashScreen />
-            {children}
-            <WhatsAppChat />
+            <CartDrawerProvider>
+              <SplashScreen />
+              {children}
+              <WhatsAppChat />
+              <CartDrawer />
+            </CartDrawerProvider>
           </CartProvider>
         </div>
       </body>
