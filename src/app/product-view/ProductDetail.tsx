@@ -24,13 +24,13 @@ export default function ProductDetail({ product }: Props) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-      <div className="relative aspect-square max-h-[500px] rounded-xl overflow-hidden bg-gray-100 border border-gray-200" id="product-image">
+      <div className="relative aspect-[3/4] w-full max-h-[340px] md:aspect-square md:max-h-[500px] rounded-xl overflow-hidden bg-transparent" id="product-image">
         <Image
           alt={product.name}
           src={imageSrc}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-cover"
+          className="object-contain"
         />
       </div>
       <div className="font-saira">
