@@ -26,12 +26,12 @@ export const metadata: Metadata = {
 
 export default function ProductsPage() {
   return (
-    <div className="flex min-h-screen w-full flex-col animate-fade-in-up">
+    <div className="flex min-h-screen w-full flex-col">
       <div className="absolute top-0 left-0 right-0 z-50">
         <Header currentPage="products" />
       </div>
       
-      <main className="flex-grow relative">
+      <main className="flex-grow relative animate-fade-in-up">
         <div className="relative z-20">
           <HeroVideo title="Shop Our Collection" subtitle="Discover artisan fragrances crafted to inspire." />
         </div>

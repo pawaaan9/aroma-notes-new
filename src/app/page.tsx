@@ -4,12 +4,12 @@ import FeaturedProducts from "./FeaturedProducts";
 
 export default async function Home() {
   return (
-    <div className="flex min-h-screen w-full flex-col animate-fade-in-up">
+    <div className="flex min-h-screen w-full flex-col">
       <div className="absolute top-0 left-0 right-0 z-50">
         <Header currentPage="home" />
       </div>
       
-      <main className="flex-grow">
+      <main className="flex-grow animate-fade-in-up">
         {/* Hero Section with Video Background */}
         <section className="relative w-full h-screen overflow-hidden">
           {/* Video Background */}

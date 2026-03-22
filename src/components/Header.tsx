@@ -12,26 +12,29 @@ interface HeaderProps {
 export default function Header({ currentPage = 'home', dark = false }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const toggleMobileMenu = () => {
-    console.log('Mobile menu toggle clicked, current state:', isMobileMenuOpen);
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  // Ensure component is mounted to prevent hydration issues
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Debug: Log menu state changes
-  useEffect(() => {
-    console.log('Mobile menu state changed:', isMobileMenuOpen);
-  }, [isMobileMenuOpen]);
+  const headerBg = dark
+    ? (scrolled ? 'bg-white/98 shadow-lg' : 'bg-white/95 shadow-sm')
+    : scrolled ? 'bg-black/90 shadow-md' : 'bg-black/30';
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!isMounted) {
     return (
-      <header className="w-full bg-transparent transition-all duration-300 relative">
+      <header className={`fixed top-0 left-0 right-0 z-[100] w-full backdrop-blur-md transition-all duration-300 ${headerBg}`}>
          <div className="container mx-auto flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10">
           {/* Enhanced Logo */}
           <Link className="flex h-full items-center gap-3 group" href="/">
@@ -91,7 +94,7 @@ export default function Header({ currentPage = 'home', dark = false }: HeaderPro
   }
 
   return (
-    <header className="w-full bg-transparent transition-all duration-300 relative">
+    <header className={`fixed top-0 left-0 right-0 z-[100] w-full backdrop-blur-md transition-all duration-300 ${headerBg}`}>
        <div className="container mx-auto flex items-center justify-between px-4 py-2 sm:px-6 lg:px-[5vw] relative z-10">
         {/* Enhanced Logo */}
         <Link className="flex h-full items-center gap-3 group" href="/">

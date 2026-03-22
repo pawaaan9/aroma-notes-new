@@ -27,12 +27,12 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="flex min-h-screen flex-col animate-fade-in-up">
+    <div className="flex min-h-screen flex-col">
       <div className="absolute top-0 left-0 right-0 z-50">
         <Header currentPage="about" />
       </div>
 
-      <main className="flex-grow">
+      <main className="flex-grow animate-fade-in-up">
         {/* Shared hero video across screens */}
         <section>
           <HeroVideo
