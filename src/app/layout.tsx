@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins, Smooch_Sans, Saira, Exo_2, Audiowide } from "next/font/google";
-import WhatsAppChat from "@/components/WhatsAppChat";
 import SplashScreen from "@/components/SplashScreen";
 import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
@@ -136,7 +135,6 @@ export default function RootLayout({
             <CartDrawerProvider>
               <SplashScreen />
               {children}
-              <WhatsAppChat />
               <CartDrawer />
             </CartDrawerProvider>
           </CartProvider>

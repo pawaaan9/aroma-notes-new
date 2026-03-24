@@ -173,7 +173,7 @@ export default function CheckoutPage() {
     return (
       <div className="flex min-h-screen w-full flex-col">
         <div className="absolute top-0 left-0 right-0 z-50">
-          <Header currentPage="products" dark />
+          <Header currentPage="products" />
         </div>
         <main className="flex flex-1 items-center justify-center bg-white px-4 pt-24 pb-16">
           <div className="mx-auto max-w-md text-center">
@@ -244,7 +244,7 @@ export default function CheckoutPage() {
     return (
       <div className="flex min-h-screen w-full flex-col">
         <div className="absolute top-0 left-0 right-0 z-50">
-          <Header currentPage="products" dark />
+          <Header currentPage="products" />
         </div>
         <main className="flex flex-1 items-center justify-center bg-white px-4 pt-24 pb-16">
           <div className="text-center">
@@ -274,7 +274,7 @@ export default function CheckoutPage() {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="absolute top-0 left-0 right-0 z-50">
-        <Header currentPage="products" dark />
+        <Header currentPage="products" />
       </div>
 
       <main className="flex-grow bg-white pt-24 pb-16">

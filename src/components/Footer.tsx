@@ -1,5 +1,9 @@
 import { FaInstagram, FaFacebook, FaTiktok } from "react-icons/fa6";
+import { IoLogoWhatsapp } from "react-icons/io5";
 import Link from "next/link";
+
+const WHATSAPP_NUMBER = "94721922332";
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 export default function Footer() {
   return (
@@ -27,7 +31,7 @@ export default function Footer() {
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></div>
             </Link>
           </div>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-4 md:justify-end">
             <a className="text-gray-600 hover:text-primary transition-all duration-300 hover:scale-110" href="https://www.instagram.com/aroma.notes_?igsh=aGRjdW1oYzQ1ZmJh" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
               <FaInstagram size={24} />
             </a>
@@ -36,6 +40,9 @@ export default function Footer() {
             </a>
             <a className="text-gray-600 hover:text-primary transition-all duration-300 hover:scale-110" href="https://www.tiktok.com/@aroma_notess?_t=ZS-90o5oCc83gl&_r=1" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
               <FaTiktok size={24} />
+            </a>
+            <a className="text-gray-600 hover:text-primary transition-all duration-300 hover:scale-110" href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+              <IoLogoWhatsapp size={24} />
             </a>
           </div>
         </div>
