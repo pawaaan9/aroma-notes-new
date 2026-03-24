@@ -24,6 +24,18 @@ type FormData = {
   notes: string;
 };
 
+const SRI_LANKA_PROVINCES = [
+  "Central",
+  "Eastern",
+  "North Central",
+  "Northern",
+  "North Western",
+  "Sabaragamuwa",
+  "Southern",
+  "Uva",
+  "Western",
+] as const;
+
 function normalizeSavedCheckoutForm(raw: unknown): FormData {
   const empty: FormData = {
     firstName: "",
@@ -544,18 +556,34 @@ export default function CheckoutPage() {
                       <label className="mb-1 block text-sm font-medium text-gray-700 font-saira">
                         State / Province <span className="text-rose-500">*</span>
                       </label>
-                      <input
-                        type="text"
-                        name="state"
-                        value={form.state}
-                        onChange={handleChange}
-                        placeholder="Western Province"
-                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
-                          errors.state
-                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
-                            : "border-gray-300 focus:border-primary focus:ring-primary/20"
-                        }`}
-                      />
+                      <div className="relative">
+                        <select
+                          name="state"
+                          value={form.state}
+                          onChange={handleChange}
+                          className={`w-full appearance-none rounded-lg border bg-white px-4 py-2.5 pr-10 text-sm text-gray-900 outline-none transition-all font-saira focus:ring-2 ${
+                            errors.state
+                              ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
+                              : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                          }`}
+                        >
+                          <option value="">Select a province</option>
+                          {SRI_LANKA_PROVINCES.map((province) => (
+                            <option key={province} value={province}>
+                              {province}
+                            </option>
+                          ))}
+                        </select>
+                        <svg
+                          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
                       {errors.state && (
                         <p className="mt-1 text-xs text-rose-500 font-saira">{errors.state}</p>
                       )}
