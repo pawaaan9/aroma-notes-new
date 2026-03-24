@@ -9,6 +9,7 @@ import { useCart } from "@/contexts/CartContext";
 import { formatLkr } from "@/utils/currency";
 import { doc, updateDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { upsertCustomerFromOrder } from "@/lib/customers";
 
 type VerifyResult = {
   status: "loading" | "success" | "failed" | "error";
@@ -92,6 +93,21 @@ function PayzyResponseContent() {
         });
         clear();
         sessionStorage.removeItem("payzyData");
+
+        // Save / update customer summary only after Payzy success
+        if (orderData?.customer?.email || orderData?.customer?.phone) {
+          upsertCustomerFromOrder({
+            customer: {
+              name: orderData?.customer?.name ?? "Customer",
+              email: orderData?.customer?.email ?? "",
+              phone: orderData?.customer?.phone ?? "",
+              city: orderData?.customer?.city ?? "",
+              address: orderData?.customer?.address ?? "",
+            },
+            orderNumber: orderNum,
+            total: Number(orderData?.total) || 0,
+          }).catch(() => {});
+        }
 
         // Fire-and-forget order confirmation email
         if (orderData?.customer?.email) {

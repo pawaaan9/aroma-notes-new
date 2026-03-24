@@ -4,9 +4,16 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Image from "next/image";
+import { fetchAllProducts } from "@/lib/firestore-products";
+import { subscribeToOrders, type Order } from "@/lib/orders";
+import { subscribeToCustomers } from "@/lib/customers";
+import { formatLkr } from "@/utils/currency";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
+  const [productCount, setProductCount] = useState(0);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [customerCount, setCustomerCount] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -17,6 +24,28 @@ export default function AdminDashboard() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    fetchAllProducts()
+      .then((products) => setProductCount(products.length))
+      .catch(() => setProductCount(0));
+
+    const unsubOrders = subscribeToOrders((data) => {
+      const visible = data.filter(
+        (o) => o.paymentMethod !== "payzy" || o.payzyPaymentStatus === "success",
+      );
+      setOrders(visible);
+    });
+
+    const unsubCustomers = subscribeToCustomers((data) => {
+      setCustomerCount(data.length);
+    });
+
+    return () => {
+      unsubOrders();
+      unsubCustomers();
+    };
+  }, []);
+
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-US", {
     weekday: "short",
@@ -24,10 +53,24 @@ export default function AdminDashboard() {
     month: "short",
   });
 
+  const startOfWeek = new Date();
+  startOfWeek.setHours(0, 0, 0, 0);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+  const totalOrders = orders.length;
+  const ordersThisWeek = orders.filter((o) => o.createdAt >= startOfWeek).length;
+  const monthlyRevenue = orders
+    .filter((o) => o.status === "sent_to_courier" && o.createdAt >= startOfMonth && o.createdAt < endOfMonth)
+    .reduce((sum, o) => sum + o.total, 0);
+  const recentOrders = orders.slice(0, 5);
+
   const statCards = [
     {
       label: "Total Products",
-      value: "0",
+      value: String(productCount),
       sub: "In catalog",
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
@@ -39,8 +82,8 @@ export default function AdminDashboard() {
     },
     {
       label: "Total Orders",
-      value: "0",
-      sub: "+ 0 this week",
+      value: String(totalOrders),
+      sub: `+ ${ordersThisWeek} this week`,
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -51,7 +94,7 @@ export default function AdminDashboard() {
     },
     {
       label: "Monthly Revenue",
-      value: "LKR 0",
+      value: formatLkr(monthlyRevenue),
       sub: "vs last month",
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
@@ -63,7 +106,7 @@ export default function AdminDashboard() {
     },
     {
       label: "Customers",
-      value: "0",
+      value: String(customerCount),
       sub: "Registered",
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
@@ -79,31 +122,20 @@ export default function AdminDashboard() {
     <div className="min-h-screen p-6">
       {/* Top Header Card - Gradient Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-600 via-rose-500 to-purple-600 p-6 shadow-xl">
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-              <Image
-                src="/logo.png"
-                alt="Aroma Notes"
-                width={32}
-                height={32}
-                className="rounded-md"
-              />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white font-saira">Aroma Notes</h1>
-              <p className="text-sm text-white/70 font-saira">Business Overview</p>
-            </div>
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-black/30 backdrop-blur-sm">
+            <Image
+              src="/logo-2.png"
+              alt="Aroma Notes"
+              width={32}
+              height={32}
+              className="rounded-md"
+            />
           </div>
-          {/* Notification bell */}
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white/80 backdrop-blur-sm transition-colors hover:bg-white/30 hover:text-white">
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-              0
-            </span>
-          </button>
+          <div>
+            <h1 className="text-xl font-bold text-white font-saira">Aroma Notes</h1>
+            <p className="text-sm text-white/70 font-saira">Business Overview</p>
+          </div>
         </div>
         {/* Decorative circles */}
         <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10" />
@@ -147,22 +179,38 @@ export default function AdminDashboard() {
               </div>
             </div>
             <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 font-saira">
-              0 orders
+              {recentOrders.length} orders
             </span>
           </div>
 
-          {/* Empty state */}
-          <div className="mt-8 flex flex-col items-center justify-center py-8">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-700/50">
-              <svg className="h-8 w-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-              </svg>
+          {recentOrders.length === 0 ? (
+            <div className="mt-8 flex flex-col items-center justify-center py-8">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-700/50">
+                <svg className="h-8 w-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-gray-400 font-saira">No orders yet</p>
+              <p className="mt-1 text-xs text-gray-500 font-saira">
+                Orders will appear here as they come in
+              </p>
             </div>
-            <p className="text-sm font-medium text-gray-400 font-saira">No orders yet</p>
-            <p className="mt-1 text-xs text-gray-500 font-saira">
-              Orders will appear here as they come in
-            </p>
-          </div>
+          ) : (
+            <div className="mt-5 space-y-2">
+              {recentOrders.map((order) => (
+                <div key={order.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-white font-saira">{order.orderNumber}</p>
+                    <p className="text-xs text-gray-400 font-saira">{order.customer.name}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-amber-400 font-saira">{formatLkr(order.total)}</p>
+                    <p className="text-xs text-gray-500 font-saira">{order.status.replaceAll("_", " ")}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Quick Info Card */}

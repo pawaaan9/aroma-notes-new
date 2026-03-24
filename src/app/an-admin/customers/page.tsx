@@ -1,9 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { subscribeToCustomers, type CustomerSummary } from "@/lib/customers";
+import { formatLkr } from "@/utils/currency";
 
 export default function CustomersPage() {
   const [search, setSearch] = useState("");
+  const [customers, setCustomers] = useState<CustomerSummary[]>([]);
+
+  useEffect(() => {
+    const unsub = subscribeToCustomers((data) => setCustomers(data));
+    return () => unsub();
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return customers;
+    return customers.filter((c) =>
+      c.name.toLowerCase().includes(q) ||
+      c.email.toLowerCase().includes(q) ||
+      c.phone.toLowerCase().includes(q),
+    );
+  }, [customers, search]);
+
+  const stats = useMemo(() => {
+    const totalCustomers = customers.length;
+    const totalSpent = customers.reduce((s, c) => s + c.totalSpent, 0);
+    const totalOrders = customers.reduce((s, c) => s + c.totalOrders, 0);
+    const avgOrder = totalOrders > 0 ? totalSpent / totalOrders : 0;
+    const now = new Date();
+    const newThisMonth = customers.filter((c) =>
+      c.lastOrderAt.getMonth() === now.getMonth() &&
+      c.lastOrderAt.getFullYear() === now.getFullYear(),
+    ).length;
+    const returning = customers.filter((c) => c.totalOrders > 1).length;
+    return { totalCustomers, newThisMonth, returning, avgOrder };
+  }, [customers]);
+
+  const formatDate = (date: Date): string =>
+    new Intl.DateTimeFormat("en-LK", { year: "numeric", month: "short", day: "numeric" }).format(date);
 
   return (
     <div className="min-h-screen p-6">
@@ -46,7 +81,7 @@ export default function CustomersPage() {
               </svg>
             </div>
           </div>
-          <p className="mt-2 text-xl font-bold text-white font-saira">0</p>
+          <p className="mt-2 text-xl font-bold text-white font-saira">{stats.totalCustomers}</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-gray-800/50 p-4">
           <div className="flex items-center justify-between">
@@ -57,7 +92,7 @@ export default function CustomersPage() {
               </svg>
             </div>
           </div>
-          <p className="mt-2 text-xl font-bold text-emerald-400 font-saira">0</p>
+          <p className="mt-2 text-xl font-bold text-emerald-400 font-saira">{stats.newThisMonth}</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-gray-800/50 p-4">
           <div className="flex items-center justify-between">
@@ -68,7 +103,7 @@ export default function CustomersPage() {
               </svg>
             </div>
           </div>
-          <p className="mt-2 text-xl font-bold text-violet-400 font-saira">0</p>
+          <p className="mt-2 text-xl font-bold text-violet-400 font-saira">{stats.returning}</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-gray-800/50 p-4">
           <div className="flex items-center justify-between">
@@ -79,7 +114,7 @@ export default function CustomersPage() {
               </svg>
             </div>
           </div>
-          <p className="mt-2 text-xl font-bold text-white font-saira">LKR 0</p>
+          <p className="mt-2 text-xl font-bold text-white font-saira">{formatLkr(stats.avgOrder)}</p>
         </div>
       </div>
 
@@ -125,23 +160,45 @@ export default function CustomersPage() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td colSpan={6} className="px-6 py-16 text-center">
-                <div className="flex flex-col items-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-700/50">
-                    <svg className="h-8 w-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-16 text-center">
+                  <div className="flex flex-col items-center">
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-700/50">
+                      <svg className="h-8 w-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-gray-400 font-saira">
+                      {search ? "No customers match your search" : "No customers yet"}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500 font-saira">
+                      {search ? "Try a different search term" : "Customer data will appear here as orders come in"}
+                    </p>
                   </div>
-                  <p className="text-sm font-medium text-gray-400 font-saira">
-                    No customers yet
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500 font-saira">
-                    Customer data will appear here as orders come in
-                  </p>
-                </div>
-              </td>
-            </tr>
+                </td>
+              </tr>
+            ) : (
+              filtered.map((c) => (
+                <tr key={c.id} className="border-b border-white/5 transition-colors hover:bg-white/[0.02]">
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-semibold text-white font-saira">{c.name}</p>
+                    <p className="text-xs text-gray-400 font-saira">{c.email || "-"}</p>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-300 font-saira">{c.phone || "-"}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-white font-saira">{c.totalOrders}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-emerald-400 font-saira">{formatLkr(c.totalSpent)}</td>
+                  <td className="px-6 py-4 text-xs text-gray-400 font-saira">
+                    {c.lastOrderNumber ? `${c.lastOrderNumber} • ${formatDate(c.lastOrderAt)}` : "-"}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white font-saira">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

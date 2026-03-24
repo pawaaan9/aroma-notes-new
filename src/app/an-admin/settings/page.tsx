@@ -6,7 +6,7 @@ import { auth } from "@/lib/firebase";
 import { subscribeToSettings, saveSettings } from "@/lib/settings";
 import Image from "next/image";
 
-type Tab = "general" | "account" | "notifications";
+type Tab = "general" | "account";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("general");
@@ -16,9 +16,9 @@ export default function SettingsPage() {
 
   // General settings state
   const [storeName, setStoreName] = useState("Aroma Notes");
-  const [storeUrl, setStoreUrl] = useState("aromanotes.lk");
+  const [storeUrl, setStoreUrl] = useState("https://aromanotes.lk");
   const [currency, setCurrency] = useState("LKR");
-  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("+94 72 192 2332");
 
   // Delivery fee from Firestore
   const [deliveryFee, setDeliveryFee] = useState<number>(350);
@@ -67,6 +67,15 @@ export default function SettingsPage() {
     setTimeout(() => setMessage(null), 4000);
   };
 
+  const handleCopy = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      showMessage("success", `${label} copied`);
+    } catch {
+      showMessage("error", `Failed to copy ${label.toLowerCase()}`);
+    }
+  };
+
   const handleUpdateProfile = async () => {
     if (!user) return;
     setSaving(true);
@@ -74,7 +83,7 @@ export default function SettingsPage() {
       await updateProfile(user, { displayName });
       showMessage("success", "Profile updated successfully");
     } catch {
-      showMessage("error", "Failed to update profile");
+      showMessage("error", "Failed to update profile.");
     } finally {
       setSaving(false);
     }
@@ -123,15 +132,6 @@ export default function SettingsPage() {
       icon: (
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      ),
-    },
-    {
-      key: "notifications",
-      label: "Notifications",
-      icon: (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       ),
     },
@@ -219,12 +219,21 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-300 font-saira">Store URL</label>
-                  <input
-                    type="text"
-                    value={storeUrl}
-                    onChange={(e) => setStoreUrl(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 px-4 text-sm text-white placeholder-gray-500 outline-none transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 font-saira"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={storeUrl}
+                      readOnly
+                      className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-4 pr-20 text-sm text-gray-400 outline-none font-saira cursor-default"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(storeUrl, "Store URL")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-gray-200 transition-colors hover:bg-white/15 font-saira"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-300 font-saira">Currency</label>
@@ -240,13 +249,21 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-300 font-saira">WhatsApp Number</label>
-                  <input
-                    type="text"
-                    value={whatsappNumber}
-                    onChange={(e) => setWhatsappNumber(e.target.value)}
-                    placeholder="+94 7X XXX XXXX"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 px-4 text-sm text-white placeholder-gray-500 outline-none transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 font-saira"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={whatsappNumber}
+                      readOnly
+                      className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-4 pr-20 text-sm text-gray-400 outline-none font-saira cursor-default"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(whatsappNumber, "WhatsApp number")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-gray-200 transition-colors hover:bg-white/15 font-saira"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="mt-6 flex justify-end">
@@ -369,6 +386,17 @@ export default function SettingsPage() {
                     disabled
                     className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 px-4 text-sm text-gray-500 outline-none font-saira cursor-not-allowed"
                   />
+                  <p className="mt-1 text-xs text-gray-500 font-saira">Email cannot be changed here.</p>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-300 font-saira">Phone Number</label>
+                  <input
+                    type="text"
+                    value={whatsappNumber}
+                    disabled
+                    className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 px-4 text-sm text-gray-500 outline-none font-saira cursor-not-allowed"
+                  />
+                  <p className="mt-1 text-xs text-gray-500 font-saira">Edit in General &gt; WhatsApp Number.</p>
                 </div>
               </div>
               <div className="mt-6 flex justify-end">
@@ -441,67 +469,8 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Notifications Settings */}
-        {activeTab === "notifications" && (
-          <div className="rounded-2xl border border-white/10 bg-gray-800/50 p-6 backdrop-blur-sm">
-            <h2 className="text-lg font-semibold text-white font-saira mb-6">Notification Preferences</h2>
-            <div className="space-y-5">
-              {[
-                { label: "New Orders", desc: "Get notified when a new order is placed", defaultOn: true },
-                { label: "Order Status Updates", desc: "Get notified when order status changes", defaultOn: true },
-                { label: "Low Stock Alerts", desc: "Get notified when product stock is low", defaultOn: true },
-                { label: "Customer Sign-ups", desc: "Get notified when a new customer registers", defaultOn: false },
-                { label: "Weekly Reports", desc: "Receive weekly sales and performance reports", defaultOn: false },
-              ].map((item) => (
-                <NotificationToggle
-                  key={item.label}
-                  label={item.label}
-                  description={item.desc}
-                  defaultOn={item.defaultOn}
-                />
-              ))}
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition-all hover:shadow-amber-500/30 hover:shadow-xl font-saira">
-                Save Preferences
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
-function NotificationToggle({
-  label,
-  description,
-  defaultOn,
-}: {
-  label: string;
-  description: string;
-  defaultOn: boolean;
-}) {
-  const [enabled, setEnabled] = useState(defaultOn);
-
-  return (
-    <div className="flex items-center justify-between rounded-xl bg-white/5 p-4">
-      <div>
-        <p className="text-sm font-medium text-white font-saira">{label}</p>
-        <p className="mt-0.5 text-xs text-gray-400 font-saira">{description}</p>
-      </div>
-      <button
-        onClick={() => setEnabled(!enabled)}
-        className={`relative h-6 w-11 rounded-full transition-colors duration-200 ${
-          enabled ? "bg-amber-500" : "bg-gray-600"
-        }`}
-      >
-        <span
-          className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
-            enabled ? "translate-x-5" : "translate-x-0"
-          }`}
-        />
-      </button>
-    </div>
-  );
-}

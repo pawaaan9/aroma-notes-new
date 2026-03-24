@@ -9,6 +9,7 @@ import { useCart } from "@/contexts/CartContext";
 import { formatLkr } from "@/utils/currency";
 import { createOrder, type OrderItem, type PaymentMethod } from "@/lib/orders";
 import { fetchSettings } from "@/lib/settings";
+import { upsertCustomerFromOrder } from "@/lib/customers";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import payzyLogo from "@/assets/payzy logo.jpg";
@@ -239,6 +240,15 @@ export default function CheckoutPage() {
         bankSlipUrl,
         customer,
       });
+
+      // Save / update customer summary for admin Customers page
+      if (paymentMethod !== "payzy") {
+        upsertCustomerFromOrder({
+          customer,
+          orderNumber: order.orderNumber,
+          total: order.total,
+        }).catch(() => {});
+      }
 
       if (paymentMethod === "payzy") {
         const res = await fetch("/api/payzy/checkout", {
