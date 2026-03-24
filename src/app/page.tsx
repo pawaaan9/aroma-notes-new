@@ -1,6 +1,7 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import FeaturedProducts from "./FeaturedProducts";
+import NewArrivals from "./NewArrivals";
 
 export default async function Home() {
   return (
@@ -84,6 +85,63 @@ export default async function Home() {
           </div>
         </section>
         
+        {/* New Arrivals Section */}
+        <section className="py-20 sm:py-28 bg-gray-950 relative overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-0 left-1/4 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl" />
+          </div>
+          <div className="mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw] relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-block mb-6 px-6 py-3 bg-white/5 rounded-full border border-white/10 backdrop-blur-sm">
+                <span className="text-amber-400 text-sm font-medium tracking-wider uppercase font-saira">Just Dropped</span>
+              </div>
+              <h2 className="text-4xl font-bold font-smooch tracking-tight text-white sm:text-5xl lg:text-6xl mb-6 animate-fade-in-up">
+                New Arrivals
+              </h2>
+              <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed font-saira animate-fade-in-up delay-300">
+                Be the first to experience our latest additions — freshly curated scents that redefine elegance.
+              </p>
+              <div className="w-32 h-1 bg-gradient-to-r from-amber-500 to-rose-500 mx-auto rounded-full mt-8 animate-fade-in-up delay-500" />
+            </div>
+
+            <NewArrivals />
+
+            <div className="text-center mt-16 animate-fade-in-up delay-700">
+              <a
+                className="group inline-block rounded-full bg-white/5 border border-white/10 px-8 py-4 text-lg font-semibold text-amber-400 hover:bg-white/10 hover:border-amber-400/30 transition-all duration-300 backdrop-blur-sm font-saira"
+                href="/products"
+              >
+                <span className="uppercase">Shop All New</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Cinematic Video Section */}
+        <section className="relative w-full h-[60vh] sm:h-[70vh] overflow-hidden">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          >
+            <source src="/c8262ad0dea54c6b8003d869c20730e8.HD-1080p-7.2Mbps-45963023.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-black/40 to-white z-10" />
+          <div className="absolute inset-0 z-20 flex items-center justify-center px-4">
+            <div className="text-center max-w-3xl">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-smooch text-white drop-shadow-lg mb-4">
+                Crafted for the Bold
+              </h2>
+              <p className="text-base sm:text-lg text-gray-200 font-saira leading-relaxed drop-shadow-md">
+                Every drop is a statement. Experience luxury that lingers.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Featured Collection Section */}
         <section id="products" className="py-20 sm:py-32 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
           <div className="mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw] relative z-20">
