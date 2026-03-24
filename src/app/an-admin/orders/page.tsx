@@ -58,6 +58,7 @@ function StatusBadge({ status }: { status: OrderStatus }) {
 const PAYMENT_CONFIG: Record<PaymentMethod, { label: string; bg: string; text: string; icon: string }> = {
   cod: { label: "Cash on Delivery", bg: "bg-amber-500/10", text: "text-amber-400", icon: "cash" },
   bank_deposit: { label: "Bank Deposit", bg: "bg-blue-500/10", text: "text-blue-400", icon: "bank" },
+  payzy: { label: "Payzy", bg: "bg-purple-500/10", text: "text-purple-400", icon: "card" },
 };
 
 function PaymentBadge({ method }: { method: PaymentMethod }) {
@@ -67,6 +68,10 @@ function PaymentBadge({ method }: { method: PaymentMethod }) {
       {c.icon === "bank" ? (
         <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+        </svg>
+      ) : c.icon === "card" ? (
+        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
         </svg>
       ) : (
         <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -373,10 +378,13 @@ export default function OrdersPage() {
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  // Real-time subscription
+  // Real-time subscription — hide PayZy orders that haven't been paid yet
   useEffect(() => {
     const unsub = subscribeToOrders((data) => {
-      setOrders(data);
+      const visible = data.filter(
+        (o) => o.paymentMethod !== "payzy" || o.payzyPaymentStatus === "success",
+      );
+      setOrders(visible);
       setLoading(false);
     });
     return () => unsub();

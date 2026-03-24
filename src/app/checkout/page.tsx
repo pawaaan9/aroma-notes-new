@@ -13,13 +13,59 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage
 import { storage } from "@/lib/firebase";
 
 type FormData = {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   address: string;
   city: string;
+  state: string;
+  zip: string;
   notes: string;
 };
+
+function normalizeSavedCheckoutForm(raw: unknown): FormData {
+  const empty: FormData = {
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    notes: "",
+  };
+  if (!raw || typeof raw !== "object") return empty;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.firstName === "string" && typeof o.lastName === "string") {
+    return {
+      firstName: o.firstName,
+      lastName: o.lastName,
+      email: typeof o.email === "string" ? o.email : "",
+      phone: typeof o.phone === "string" ? o.phone : "",
+      address: typeof o.address === "string" ? o.address : "",
+      city: typeof o.city === "string" ? o.city : "",
+      state: typeof o.state === "string" ? o.state : "",
+      zip: typeof o.zip === "string" ? o.zip : "",
+      notes: typeof o.notes === "string" ? o.notes : "",
+    };
+  }
+  const legacyName = typeof o.name === "string" ? o.name.trim() : "";
+  const parts = legacyName.split(/\s+/).filter(Boolean);
+  return {
+    ...empty,
+    firstName: parts[0] ?? "",
+    lastName: parts.slice(1).join(" "),
+    email: typeof o.email === "string" ? o.email : "",
+    phone: typeof o.phone === "string" ? o.phone : "",
+    address: typeof o.address === "string" ? o.address : "",
+    city: typeof o.city === "string" ? o.city : "",
+    state: typeof o.state === "string" ? o.state : "",
+    zip: typeof o.zip === "string" ? o.zip : "",
+    notes: typeof o.notes === "string" ? o.notes : "",
+  };
+}
 
 export default function CheckoutPage() {
   const { items, total, clear } = useCart();
@@ -29,13 +75,14 @@ export default function CheckoutPage() {
   useEffect(() => {
     fetchSettings().then((s) => setDeliveryFeeConfig(s.deliveryFee));
   }, []);
-  const [form, setForm] = useState<FormData>({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    notes: "",
+  const [form, setForm] = useState<FormData>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("aroma-notes:checkout-form");
+        if (saved) return normalizeSavedCheckoutForm(JSON.parse(saved));
+      } catch { /* ignore */ }
+    }
+    return normalizeSavedCheckoutForm(null);
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
@@ -53,6 +100,19 @@ export default function CheckoutPage() {
   const DELIVERY_FEE = deliveryFeeConfig ?? 350; // fallback while loading
   const deliveryFee = total > 0 ? DELIVERY_FEE : 0;
   const grandTotal = total + deliveryFee;
+
+  useEffect(() => {
+    try {
+      const key = "aroma-notes:checkout-form";
+      try { localStorage.setItem(key, JSON.stringify(form)); } catch {
+        // QUOTA_EXCEEDED – clear stale entries and retry once
+        try {
+          localStorage.removeItem(key);
+          localStorage.setItem(key, JSON.stringify(form));
+        } catch { /* give up silently */ }
+      }
+    } catch { /* ignore */ }
+  }, [form]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -92,11 +152,15 @@ export default function CheckoutPage() {
 
   const validate = (): boolean => {
     const errs: Partial<FormData> = {};
-    if (!form.name.trim()) errs.name = "Name is required";
+    if (!form.firstName.trim()) errs.firstName = "First name is required";
+    if (!form.lastName.trim()) errs.lastName = "Last name is required";
     if (!form.phone.trim()) errs.phone = "Phone number is required";
     if (!form.address.trim()) errs.address = "Address is required";
     if (!form.city.trim()) errs.city = "City is required";
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (!form.state.trim()) errs.state = "State / province is required";
+    if (!form.zip.trim()) errs.zip = "Postal code is required";
+    if (!form.email.trim()) errs.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = "Invalid email address";
     }
     setErrors(errs);
@@ -141,6 +205,18 @@ export default function CheckoutPage() {
         quantity: it.quantity,
       }));
 
+      const customerName =
+        `${form.firstName.trim()} ${form.lastName.trim()}`.trim() || "Customer";
+      const customerNotes = form.notes.trim();
+      const customer = {
+        name: customerName,
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
+        city: form.city.trim(),
+        ...(customerNotes ? { notes: customerNotes } : {}),
+      };
+
       const order = await createOrder({
         items: orderItems,
         subtotal: total,
@@ -148,18 +224,43 @@ export default function CheckoutPage() {
         total: grandTotal,
         paymentMethod,
         bankSlipUrl,
-        customer: {
-          name: form.name.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          address: form.address.trim(),
-          city: form.city.trim(),
-          notes: form.notes.trim() || undefined,
-        },
+        customer,
       });
+
+      if (paymentMethod === "payzy") {
+        const res = await fetch("/api/payzy/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: order.id,
+            amount: grandTotal,
+            deliveryFee,
+            firstName: form.firstName.trim(),
+            lastName: form.lastName.trim(),
+            company: "",
+            email: form.email.trim(),
+            phone: form.phone.trim(),
+            address: form.address.trim(),
+            city: form.city.trim(),
+            state: form.state.trim(),
+            zip: form.zip.trim(),
+            origin: window.location.origin,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) {
+          throw new Error(data.error || "Failed to connect to Payzy. Please try another payment method.");
+        }
+        if (data.payzyData) {
+          sessionStorage.setItem("payzyData", JSON.stringify(data.payzyData));
+        }
+        window.location.href = data.url;
+        return;
+      }
 
       setOrderPlaced({ orderNumber: order.orderNumber, total: order.total, paymentMethod });
       clear();
+      localStorage.removeItem("aroma-notes:checkout-form");
     } catch (err) {
       console.error("Order failed:", err);
       alert("Something went wrong placing your order. Please try again.");
@@ -207,7 +308,9 @@ export default function CheckoutPage() {
                 <p className="mt-1 text-sm font-semibold text-gray-800 font-saira">
                   {orderPlaced.paymentMethod === "bank_deposit"
                     ? "Bank Deposit (slip uploaded)"
-                    : "Cash on Delivery"}
+                    : orderPlaced.paymentMethod === "payzy"
+                      ? "Payzy (Buy Now, Pay Later)"
+                      : "Cash on Delivery"}
                 </p>
               </div>
             </div>
@@ -215,7 +318,9 @@ export default function CheckoutPage() {
             <p className="mt-4 text-sm text-gray-500 font-saira">
               {orderPlaced.paymentMethod === "bank_deposit"
                 ? "We\u2019ve received your bank slip. We\u2019ll verify the payment and process your order shortly."
-                : "We\u2019ll contact you via WhatsApp or phone to confirm your order and arrange delivery."}
+                : orderPlaced.paymentMethod === "payzy"
+                  ? "Your Payzy payment has been confirmed. We\u2019ll process your order and arrange delivery shortly."
+                  : "We\u2019ll contact you via WhatsApp or phone to confirm your order and arrange delivery."}
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -302,25 +407,47 @@ export default function CheckoutPage() {
                   </h2>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {/* Name */}
-                    <div className="sm:col-span-2">
+                    {/* First name */}
+                    <div>
                       <label className="mb-1 block text-sm font-medium text-gray-700 font-saira">
-                        Full Name <span className="text-rose-500">*</span>
+                        First Name <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="text"
-                        name="name"
-                        value={form.name}
+                        name="firstName"
+                        value={form.firstName}
                         onChange={handleChange}
-                        placeholder="John Perera"
+                        placeholder="John"
                         className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
-                          errors.name
+                          errors.firstName
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
                             : "border-gray-300 focus:border-primary focus:ring-primary/20"
                         }`}
                       />
-                      {errors.name && (
-                        <p className="mt-1 text-xs text-rose-500 font-saira">{errors.name}</p>
+                      {errors.firstName && (
+                        <p className="mt-1 text-xs text-rose-500 font-saira">{errors.firstName}</p>
+                      )}
+                    </div>
+
+                    {/* Last name */}
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700 font-saira">
+                        Last Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={form.lastName}
+                        onChange={handleChange}
+                        placeholder="Perera"
+                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                          errors.lastName
+                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
+                            : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                        }`}
+                      />
+                      {errors.lastName && (
+                        <p className="mt-1 text-xs text-rose-500 font-saira">{errors.lastName}</p>
                       )}
                     </div>
 
@@ -349,7 +476,7 @@ export default function CheckoutPage() {
                     {/* Email */}
                     <div>
                       <label className="mb-1 block text-sm font-medium text-gray-700 font-saira">
-                        Email <span className="text-xs text-gray-400">(optional)</span>
+                        Email <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="email"
@@ -409,6 +536,50 @@ export default function CheckoutPage() {
                       />
                       {errors.city && (
                         <p className="mt-1 text-xs text-rose-500 font-saira">{errors.city}</p>
+                      )}
+                    </div>
+
+                    {/* State / province */}
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700 font-saira">
+                        State / Province <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="state"
+                        value={form.state}
+                        onChange={handleChange}
+                        placeholder="Western Province"
+                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                          errors.state
+                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
+                            : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                        }`}
+                      />
+                      {errors.state && (
+                        <p className="mt-1 text-xs text-rose-500 font-saira">{errors.state}</p>
+                      )}
+                    </div>
+
+                    {/* Postal code */}
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700 font-saira">
+                        Postal Code <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="zip"
+                        value={form.zip}
+                        onChange={handleChange}
+                        placeholder="e.g. 10300"
+                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                          errors.zip
+                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
+                            : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                        }`}
+                      />
+                      {errors.zip && (
+                        <p className="mt-1 text-xs text-rose-500 font-saira">{errors.zip}</p>
                       )}
                     </div>
 
@@ -492,6 +663,35 @@ export default function CheckoutPage() {
                         <p className="font-semibold text-gray-900 font-saira">Bank Deposit</p>
                         <p className="text-sm text-gray-500 font-saira">
                           Transfer to our bank account &amp; upload slip
+                        </p>
+                      </div>
+                    </button>
+                    {/* Payzy (Buy Now, Pay Later) */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("payzy")}
+                      className={`flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-all ${
+                        paymentMethod === "payzy"
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                        paymentMethod === "payzy" ? "border-primary" : "border-gray-300"
+                      }`}>
+                        {paymentMethod === "payzy" && (
+                          <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100">
+                        <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 font-saira">Payzy</p>
+                        <p className="text-sm text-gray-500 font-saira">
+                          Buy now, pay later in installments
                         </p>
                       </div>
                     </button>
@@ -685,7 +885,6 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    onClick={handleSubmit}
                     className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-saira font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {submitting ? (

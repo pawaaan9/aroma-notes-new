@@ -21,7 +21,7 @@ import { db } from "@/lib/firebase";
 
 export type OrderStatus = "pending" | "processing" | "completed" | "cancelled";
 
-export type PaymentMethod = "cod" | "bank_deposit";
+export type PaymentMethod = "cod" | "bank_deposit" | "payzy";
 
 export type OrderItem = {
   productId: string;
@@ -43,6 +43,7 @@ export type Order = {
   status: OrderStatus;
   paymentMethod: PaymentMethod;
   bankSlipUrl?: string;
+  payzyPaymentStatus?: string;
   customer: {
     name: string;
     email: string;
@@ -96,6 +97,7 @@ function mapDocToOrder(id: string, data: Record<string, any>): Order {
     status: data.status ?? "pending",
     paymentMethod: data.paymentMethod ?? "cod",
     bankSlipUrl: data.bankSlipUrl ?? undefined,
+    payzyPaymentStatus: data.payzyPaymentStatus ?? undefined,
     customer: {
       name: data.customer?.name ?? "",
       email: data.customer?.email ?? "",
@@ -132,6 +134,10 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
 
   if (input.bankSlipUrl) {
     docData.bankSlipUrl = input.bankSlipUrl;
+  }
+
+  if (input.paymentMethod === "payzy") {
+    docData.payzyPaymentStatus = "awaiting";
   }
 
   const ref = await addDoc(collection(db, "orders"), docData);
