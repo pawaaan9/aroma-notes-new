@@ -29,8 +29,8 @@ const STATUS_CONFIG: Record<
     text: "text-blue-500",
     dot: "bg-blue-500",
   },
-  completed: {
-    label: "Completed",
+  sent_to_courier: {
+    label: "Sent to Courier",
     bg: "bg-emerald-500/10",
     text: "text-emerald-400",
     dot: "bg-emerald-400",
@@ -93,6 +93,10 @@ function formatDate(date: Date): string {
   }).format(date);
 }
 
+function isPaidPayzyOrder(order: Order): boolean {
+  return order.paymentMethod === "payzy" && order.payzyPaymentStatus === "success";
+}
+
 /* ------------------------------------------------------------------ */
 /*  Order Detail Modal                                                 */
 /* ------------------------------------------------------------------ */
@@ -107,6 +111,7 @@ function OrderDetailModal({
 }) {
   const [updating, setUpdating] = useState(false);
   const [slipExpanded, setSlipExpanded] = useState(false);
+  const canCancelOrder = !isPaidPayzyOrder(order);
 
   const handleStatus = async (status: OrderStatus) => {
     setUpdating(true);
@@ -178,7 +183,7 @@ function OrderDetailModal({
             <StatusBadge status={order.status} />
             <PaymentBadge method={order.paymentMethod} />
             <div className="ml-auto flex flex-wrap gap-2">
-              {order.status !== "processing" && order.status !== "completed" && (
+              {order.status !== "processing" && order.status !== "sent_to_courier" && (
                 <button
                   disabled={updating}
                   onClick={() => handleStatus("processing")}
@@ -187,16 +192,16 @@ function OrderDetailModal({
                   Mark Processing
                 </button>
               )}
-              {order.status !== "completed" && (
+              {order.status !== "sent_to_courier" && (
                 <button
                   disabled={updating}
-                  onClick={() => handleStatus("completed")}
+                  onClick={() => handleStatus("sent_to_courier")}
                   className="rounded-lg bg-emerald-500/20 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/30 disabled:opacity-50 font-saira"
                 >
-                  Mark Completed
+                  Handed to Courier
                 </button>
               )}
-              {order.status !== "cancelled" && order.status !== "completed" && (
+              {order.status !== "cancelled" && order.status !== "sent_to_courier" && canCancelOrder && (
                 <button
                   disabled={updating}
                   onClick={() => handleStatus("cancelled")}
@@ -207,6 +212,11 @@ function OrderDetailModal({
               )}
             </div>
           </div>
+          {!canCancelOrder && (
+            <p className="text-xs text-purple-300 font-saira">
+              This order is already paid via Payzy and cannot be cancelled.
+            </p>
+          )}
 
           {/* Bank slip (shown when bank_deposit) */}
           {order.paymentMethod === "bank_deposit" && (
@@ -392,7 +402,7 @@ export default function OrdersPage() {
 
   // Counts per status
   const counts = useMemo(() => {
-    const c = { all: 0, pending: 0, processing: 0, completed: 0, cancelled: 0 };
+    const c = { all: 0, pending: 0, processing: 0, sent_to_courier: 0, cancelled: 0 };
     for (const o of orders) {
       c.all++;
       c[o.status]++;
@@ -400,9 +410,9 @@ export default function OrdersPage() {
     return c;
   }, [orders]);
 
-  // Revenue (completed orders)
+  // Revenue (orders handed to courier)
   const revenue = useMemo(
-    () => orders.filter((o) => o.status === "completed").reduce((s, o) => s + o.total, 0),
+    () => orders.filter((o) => o.status === "sent_to_courier").reduce((s, o) => s + o.total, 0),
     [orders],
   );
 
@@ -429,11 +439,18 @@ export default function OrdersPage() {
     { key: "all", label: "All", count: counts.all },
     { key: "pending", label: "Pending", count: counts.pending },
     { key: "processing", label: "Processing", count: counts.processing },
-    { key: "completed", label: "Completed", count: counts.completed },
+    { key: "sent_to_courier", label: "Sent to Courier", count: counts.sent_to_courier },
     { key: "cancelled", label: "Cancelled", count: counts.cancelled },
   ];
 
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
+    if (status === "cancelled") {
+      const targetOrder = orders.find((o) => o.id === orderId);
+      if (targetOrder && isPaidPayzyOrder(targetOrder)) {
+        return;
+      }
+    }
+
     await updateOrderStatus(orderId, status);
     // The real-time listener will automatically update the UI
     // Also update the selected order view
@@ -471,8 +488,8 @@ export default function OrdersPage() {
           <p className="mt-1 text-xl font-bold text-amber-400 font-saira">{counts.pending}</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-gray-800/50 p-4">
-          <p className="text-xs text-gray-400 font-saira">Completed</p>
-          <p className="mt-1 text-xl font-bold text-emerald-400 font-saira">{counts.completed}</p>
+          <p className="text-xs text-gray-400 font-saira">Sent to Courier</p>
+          <p className="mt-1 text-xl font-bold text-emerald-400 font-saira">{counts.sent_to_courier}</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-gray-800/50 p-4">
           <p className="text-xs text-gray-400 font-saira">Revenue</p>

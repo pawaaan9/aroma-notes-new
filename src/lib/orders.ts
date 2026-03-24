@@ -19,7 +19,7 @@ import { db } from "@/lib/firebase";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-export type OrderStatus = "pending" | "processing" | "completed" | "cancelled";
+export type OrderStatus = "pending" | "processing" | "sent_to_courier" | "cancelled";
 
 export type PaymentMethod = "cod" | "bank_deposit" | "payzy";
 
@@ -79,6 +79,14 @@ function mapDocToOrder(id: string, data: Record<string, any>): Order {
     return new Date();
   };
 
+  const normalizeStatus = (status: unknown): OrderStatus => {
+    if (status === "completed") return "sent_to_courier";
+    if (status === "pending" || status === "processing" || status === "sent_to_courier" || status === "cancelled") {
+      return status;
+    }
+    return "pending";
+  };
+
   return {
     id,
     orderNumber: data.orderNumber ?? "",
@@ -94,7 +102,7 @@ function mapDocToOrder(id: string, data: Record<string, any>): Order {
     subtotal: Number(data.subtotal) || 0,
     deliveryFee: Number(data.deliveryFee) || 0,
     total: Number(data.total) || 0,
-    status: data.status ?? "pending",
+    status: normalizeStatus(data.status),
     paymentMethod: data.paymentMethod ?? "cod",
     bankSlipUrl: data.bankSlipUrl ?? undefined,
     payzyPaymentStatus: data.payzyPaymentStatus ?? undefined,
