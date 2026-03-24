@@ -11,6 +11,7 @@ import { createOrder, type OrderItem, type PaymentMethod } from "@/lib/orders";
 import { fetchSettings } from "@/lib/settings";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
+import payzyLogo from "@/assets/payzy logo.jpg";
 
 type FormData = {
   firstName: string;
@@ -736,10 +737,14 @@ export default function CheckoutPage() {
                           <div className="h-2.5 w-2.5 rounded-full bg-primary" />
                         )}
                       </div>
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100">
-                        <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                        </svg>
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-purple-200 bg-white">
+                        <Image
+                          src={payzyLogo}
+                          alt="Payzy"
+                          width={28}
+                          height={28}
+                          className="object-contain"
+                        />
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 font-saira">Payzy</p>
@@ -749,6 +754,56 @@ export default function CheckoutPage() {
                       </div>
                     </button>
                   </div>
+
+                  {/* Payzy installment plans (shown when payzy selected) */}
+                  {paymentMethod === "payzy" && (
+                    <div className="mt-4">
+                      <div className="overflow-hidden rounded-xl border border-sky-200">
+                        <div className="bg-gradient-to-r from-sky-500 to-cyan-500 px-5 py-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Image src={payzyLogo} alt="Payzy" width={20} height={20} className="rounded-sm" />
+                              <h3 className="text-sm font-bold text-white font-saira">Payzy – Buy Now, Pay Later</h3>
+                            </div>
+                            <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-bold text-white font-saira">
+                              {formatLkr(grandTotal)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="bg-white p-4">
+                          <p className="mb-3 text-xs font-medium text-gray-500 font-saira uppercase tracking-wider">Choose a plan on Payzy</p>
+                          <div className="grid grid-cols-3 gap-2.5">
+                            {[2, 3, 4].map((months) => (
+                              <div
+                                key={months}
+                                className="rounded-lg border border-sky-100 bg-sky-50/60 p-3 text-center transition-colors hover:border-sky-300 hover:bg-sky-50"
+                              >
+                                <p className="text-[11px] font-medium text-sky-500 font-saira uppercase tracking-wider">
+                                  {months} Months
+                                </p>
+                                <p className="mt-1 font-saira">
+                                  <span className="text-lg font-bold text-sky-700">{formatLkr(Math.ceil(grandTotal / months))}</span>
+                                  <span className="text-[10px] text-gray-400">/mo</span>
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-3 flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+                            <span className="text-xs text-gray-500 font-saira">Or pay full amount</span>
+                            <span className="text-sm font-bold text-gray-900 font-saira">{formatLkr(grandTotal)}</span>
+                          </div>
+                        </div>
+                        <div className="bg-sky-50 px-5 py-2.5 border-t border-sky-100">
+                          <p className="flex items-start gap-2 text-xs text-sky-700 font-saira">
+                            <svg className="h-3.5 w-3.5 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                            </svg>
+                            You&apos;ll be redirected to Payzy to select your preferred plan and complete payment.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Bank details + slip upload (shown when bank_deposit selected) */}
                   {paymentMethod === "bank_deposit" && (

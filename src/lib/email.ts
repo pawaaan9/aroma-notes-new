@@ -22,6 +22,8 @@ type OrderEmailData = {
   phone: string;
 };
 
+const F = "'Segoe UI',Arial,sans-serif";
+
 function formatLkr(amount: number): string {
   return `LKR ${Math.round(amount).toLocaleString("en-LK")}`;
 }
@@ -35,46 +37,93 @@ function paymentLabel(method: string): string {
   }
 }
 
-function itemsTableHtml(items: OrderEmailData["items"]): string {
+function itemRows(items: OrderEmailData["items"]): string {
   return items
     .map(
       (it) => `
       <tr>
-        <td style="padding:10px 12px;border-bottom:1px solid #eef1f6;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#1a1f36">
-          <div style="font-weight:600">${it.name}</div>
-          <div style="margin-top:2px;font-size:12px;color:#5d6478">
-            ${it.brand ? `Brand: ${it.brand}` : "Brand: -"} &nbsp;|&nbsp; ${it.size ? `Size: ${it.size}` : "Size: -"}
-          </div>
+        <td style="padding:12px 14px;border-bottom:1px solid #eef1f6;font-family:${F}">
+          <div style="font-size:14px;font-weight:600;color:#111827">${it.name}</div>
+          <div style="margin-top:3px;font-size:12px;color:#6b7280">${it.brand || "—"} &middot; ${it.size || "—"}</div>
         </td>
-        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#333;text-align:center">${it.quantity}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#333;text-align:right">${formatLkr(it.price * it.quantity)}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid #eef1f6;font-family:${F};font-size:14px;color:#374151;text-align:center">${it.quantity}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid #eef1f6;font-family:${F};font-size:14px;font-weight:600;color:#111827;text-align:right">${formatLkr(it.price * it.quantity)}</td>
       </tr>`,
     )
     .join("");
 }
 
-function baseLayout(title: string, body: string): string {
+function sectionTitle(text: string): string {
+  return `<h3 style="margin:0 0 10px;font-family:${F};font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1.5px">${text}</h3>`;
+}
+
+function totalsBlock(data: OrderEmailData): string {
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+      <tr>
+        <td style="padding:6px 0;font-family:${F};font-size:13px;color:#6b7280">Subtotal</td>
+        <td style="padding:6px 0;font-family:${F};font-size:13px;color:#111827;text-align:right">${formatLkr(data.subtotal)}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;font-family:${F};font-size:13px;color:#6b7280">Delivery</td>
+        <td style="padding:6px 0;font-family:${F};font-size:13px;color:#111827;text-align:right">${formatLkr(data.deliveryFee)}</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:0"><div style="margin:8px 0;border-top:2px solid #e5e7eb"></div></td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;font-family:${F};font-size:16px;font-weight:700;color:#111827">Total</td>
+        <td style="padding:4px 0;font-family:${F};font-size:16px;font-weight:700;color:#111827;text-align:right">${formatLkr(data.total)}</td>
+      </tr>
+    </table>`;
+}
+
+function deliveryBlock(data: OrderEmailData): string {
+  return `
+    ${sectionTitle("Delivery Address")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;margin-bottom:24px">
+      <tr><td style="padding:12px 16px;font-family:${F}">
+        <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:4px">${data.customerName}</div>
+        <div style="font-size:13px;color:#4b5563;line-height:1.6">${data.address}<br/>${data.city}</div>
+        <div style="font-size:13px;color:#4b5563;margin-top:4px">${data.phone}</div>
+      </td></tr>
+    </table>`;
+}
+
+function paymentBlock(data: OrderEmailData): string {
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;margin-bottom:24px">
+      <tr><td style="padding:12px 16px;font-family:${F}">
+        <div style="font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Payment Method</div>
+        <div style="font-size:14px;font-weight:600;color:#111827">${paymentLabel(data.paymentMethod)}</div>
+      </td></tr>
+    </table>`;
+}
+
+function baseLayout(title: string, accentColor: string, body: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${title}</title></head>
-<body style="margin:0;padding:0;background:#f4f7fb;-webkit-font-smoothing:antialiased">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:32px 16px">
+<body style="margin:0;padding:0;background-color:#f3f4f6;-webkit-font-smoothing:antialiased">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:24px 12px">
     <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(7,20,53,0.10)">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
         <!-- Header -->
         <tr>
-          <td style="background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#0ea5a5 100%);padding:30px 32px;text-align:center">
-            <h1 style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:1px">AROMA NOTES</h1>
-            <p style="margin:4px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.78);letter-spacing:2px;text-transform:uppercase">Luxury Fragrance Experience</p>
+          <td style="background-color:#0f172a;padding:28px 24px;text-align:center">
+            <h1 style="margin:0;font-family:${F};font-size:20px;font-weight:700;color:#ffffff;letter-spacing:2px">AROMA NOTES</h1>
+            <p style="margin:6px 0 0;font-family:${F};font-size:11px;color:#94a3b8;letter-spacing:2px;text-transform:uppercase">Luxury Fragrance Experience</p>
           </td>
         </tr>
+        <!-- Accent bar -->
+        <tr><td style="background-color:${accentColor};height:4px;font-size:0;line-height:0">&nbsp;</td></tr>
         <!-- Body -->
-        <tr><td style="padding:32px">${body}</td></tr>
+        <tr><td style="padding:28px 24px">${body}</td></tr>
         <!-- Footer -->
         <tr>
-          <td style="background:#fafafa;padding:20px 32px;text-align:center;border-top:1px solid #eee">
-            <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#999">Aroma Notes &mdash; Premium Fragrances, Sri Lanka</p>
-            <p style="margin:4px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#bbb">This is an automated email. Please do not reply directly.</p>
+          <td style="background-color:#f9fafb;padding:18px 24px;text-align:center;border-top:1px solid #e5e7eb">
+            <p style="margin:0;font-family:${F};font-size:11px;color:#9ca3af">Aroma Notes &mdash; Premium Fragrances, Sri Lanka</p>
+            <p style="margin:4px 0 0;font-family:${F};font-size:10px;color:#d1d5db">This is an automated email. Please do not reply directly.</p>
           </td>
         </tr>
       </table>
@@ -84,136 +133,133 @@ function baseLayout(title: string, body: string): string {
 </html>`;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Order Confirmation                                                 */
+/* ------------------------------------------------------------------ */
+
 export function buildOrderConfirmationHtml(data: OrderEmailData): string {
   const body = `
-    <h2 style="margin:0 0 4px;font-family:'Segoe UI',Arial,sans-serif;font-size:22px;color:#0f172a">Order Confirmed!</h2>
-    <p style="margin:0 0 24px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#4b5563;line-height:1.65">Hi ${data.customerName}, thank you for choosing Aroma Notes. We have received your order and started preparing it with care.</p>
-
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fbff;border:1px solid #e6eefb;border-radius:12px;padding:16px;margin-bottom:24px">
-      <tr>
-        <td style="padding:8px 16px">
-          <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px">Order Number</p>
-          <p style="margin:4px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:18px;font-weight:700;color:#1a1a2e">${data.orderNumber}</p>
-        </td>
-        <td style="padding:8px 16px;text-align:right">
-          <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px">Payment</p>
-          <p style="margin:4px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:600;color:#1a1a2e">${paymentLabel(data.paymentMethod)}</p>
-        </td>
-      </tr>
-    </table>
-
-    <h3 style="margin:0 0 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:1px">Items Ordered</h3>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e7ecf4;border-radius:10px;overflow:hidden;margin-bottom:20px">
-      <tr style="background:#f5f8fd">
-        <th style="padding:10px 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#666;text-align:left;text-transform:uppercase;letter-spacing:0.5px">Product</th>
-        <th style="padding:10px 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#666;text-align:center;text-transform:uppercase;letter-spacing:0.5px">Qty</th>
-        <th style="padding:10px 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#666;text-align:right;text-transform:uppercase;letter-spacing:0.5px">Amount</th>
-      </tr>
-      ${itemsTableHtml(data.items)}
-    </table>
-
+    <!-- Hero -->
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+      <tr><td style="text-align:center;padding:8px 0 0">
+        <div style="display:inline-block;width:48px;height:48px;border-radius:50%;background-color:#ecfdf5;text-align:center;line-height:48px;font-size:22px">&#10003;</div>
+      </td></tr>
+      <tr><td style="text-align:center;padding:12px 0 0">
+        <h2 style="margin:0;font-family:${F};font-size:22px;font-weight:700;color:#111827">Order Confirmed!</h2>
+      </td></tr>
+      <tr><td style="text-align:center;padding:6px 0 0">
+        <p style="margin:0;font-family:${F};font-size:14px;color:#6b7280;line-height:1.6">Hi ${data.customerName}, thank you for choosing Aroma Notes.<br/>We have received your order and started preparing it.</p>
+      </td></tr>
+    </table>
+
+    <!-- Order info bar -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f172a;border-radius:8px;margin-bottom:24px">
       <tr>
-        <td style="padding:6px 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#666">Subtotal</td>
-        <td style="padding:6px 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#333;text-align:right">${formatLkr(data.subtotal)}</td>
-      </tr>
-      <tr>
-        <td style="padding:6px 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#666">Delivery Fee</td>
-        <td style="padding:6px 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#333;text-align:right">${formatLkr(data.deliveryFee)}</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:700;color:#1a1a2e;border-top:2px solid #eee">Total</td>
-        <td style="padding:10px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:700;color:#1a1a2e;text-align:right;border-top:2px solid #eee">${formatLkr(data.total)}</td>
+        <td style="padding:14px 18px">
+          <div style="font-family:${F};font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px">Order Number</div>
+          <div style="font-family:${F};font-size:17px;font-weight:700;color:#ffffff;margin-top:2px">${data.orderNumber}</div>
+        </td>
+        <td style="padding:14px 18px;text-align:right">
+          <div style="font-family:${F};font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px">Total</div>
+          <div style="font-family:${F};font-size:17px;font-weight:700;color:#ffffff;margin-top:2px">${formatLkr(data.total)}</div>
+        </td>
       </tr>
     </table>
 
-    <h3 style="margin:0 0 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:1px">Delivery Details</h3>
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fbff;border:1px solid #e6eefb;border-radius:10px;padding:12px 16px;margin-bottom:24px">
-      <tr><td style="padding:4px 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#333"><strong>${data.customerName}</strong></td></tr>
-      <tr><td style="padding:4px 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#555">${data.address}</td></tr>
-      <tr><td style="padding:4px 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#555">${data.city}</td></tr>
-      <tr><td style="padding:4px 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#555">${data.phone}</td></tr>
+    ${paymentBlock(data)}
+
+    <!-- Items -->
+    ${sectionTitle("Items Ordered")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:20px">
+      <tr style="background-color:#f9fafb">
+        <th style="padding:10px 14px;font-family:${F};font-size:11px;color:#6b7280;text-align:left;text-transform:uppercase;letter-spacing:0.5px">Product</th>
+        <th style="padding:10px 14px;font-family:${F};font-size:11px;color:#6b7280;text-align:center;text-transform:uppercase;letter-spacing:0.5px">Qty</th>
+        <th style="padding:10px 14px;font-family:${F};font-size:11px;color:#6b7280;text-align:right;text-transform:uppercase;letter-spacing:0.5px">Amount</th>
+      </tr>
+      ${itemRows(data.items)}
     </table>
 
-    <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#4b5563;line-height:1.65">Your fragrance is on the way to being packed. We&rsquo;ll send another update once it is handed over to our courier team.</p>`;
+    ${totalsBlock(data)}
+    ${deliveryBlock(data)}
 
-  return baseLayout("Order Confirmation - Aroma Notes", body);
+    <p style="margin:0;font-family:${F};font-size:13px;color:#6b7280;line-height:1.65;text-align:center">
+      Your fragrance is being packed with care. We&rsquo;ll send another email once it&rsquo;s handed over to our courier.
+    </p>`;
+
+  return baseLayout("Order Confirmation - Aroma Notes", "#10b981", body);
 }
+
+/* ------------------------------------------------------------------ */
+/*  Shipped / Handed to Courier                                        */
+/* ------------------------------------------------------------------ */
 
 export function buildShippedEmailHtml(
   data: OrderEmailData & { deliveryDays: number },
 ): string {
   const body = `
-    <div style="text-align:center;margin-bottom:24px">
-      <div style="display:inline-block;background:#e8fff8;border-radius:50%;width:64px;height:64px;line-height:64px;text-align:center;font-size:28px;border:1px solid #c8f1e4">&#128666;</div>
-    </div>
-
-    <h2 style="margin:0 0 4px;font-family:'Segoe UI',Arial,sans-serif;font-size:22px;color:#0f172a;text-align:center">Your Order Is On The Way!</h2>
-    <p style="margin:0 0 24px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#4b5563;text-align:center;line-height:1.65">Hi ${data.customerName}, great news! We have handed your order to our courier team.</p>
-
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fbff;border:1px solid #e6eefb;border-radius:12px;margin-bottom:24px">
-      <tr>
-        <td style="padding:8px 16px">
-          <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px">Order Number</p>
-          <p style="margin:4px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:18px;font-weight:700;color:#1a1a2e">${data.orderNumber}</p>
-        </td>
-        <td style="padding:8px 16px;text-align:right">
-          <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px">Payment</p>
-          <p style="margin:4px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:600;color:#1a1a2e">${paymentLabel(data.paymentMethod)}</p>
-        </td>
-      </tr>
-    </table>
-
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 45%,#059669 100%);border-radius:12px;margin-bottom:24px">
-      <tr>
-        <td style="padding:20px;text-align:center">
-          <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px">Estimated Delivery</p>
-          <p style="margin:8px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:28px;font-weight:700;color:#ffffff">${data.deliveryDays} Working Day${data.deliveryDays > 1 ? "s" : ""}</p>
-        </td>
-      </tr>
-    </table>
-
-    <h3 style="margin:0 0 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:1px">Items in This Shipment</h3>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e7ecf4;border-radius:10px;overflow:hidden;margin-bottom:20px">
-      <tr style="background:#f5f8fd">
-        <th style="padding:10px 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#666;text-align:left;text-transform:uppercase;letter-spacing:0.5px">Product</th>
-        <th style="padding:10px 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#666;text-align:center;text-transform:uppercase;letter-spacing:0.5px">Qty</th>
-        <th style="padding:10px 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#666;text-align:right;text-transform:uppercase;letter-spacing:0.5px">Amount</th>
-      </tr>
-      ${itemsTableHtml(data.items)}
-    </table>
-
+    <!-- Hero -->
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+      <tr><td style="text-align:center;padding:8px 0 0">
+        <div style="display:inline-block;width:48px;height:48px;border-radius:50%;background-color:#eff6ff;text-align:center;line-height:48px;font-size:22px">&#128666;</div>
+      </td></tr>
+      <tr><td style="text-align:center;padding:12px 0 0">
+        <h2 style="margin:0;font-family:${F};font-size:22px;font-weight:700;color:#111827">Your Order Is On The Way!</h2>
+      </td></tr>
+      <tr><td style="text-align:center;padding:6px 0 0">
+        <p style="margin:0;font-family:${F};font-size:14px;color:#6b7280;line-height:1.6">Hi ${data.customerName}, your order has been handed<br/>to our courier and is on its way to you.</p>
+      </td></tr>
+    </table>
+
+    <!-- Order info bar -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f172a;border-radius:8px;margin-bottom:16px">
       <tr>
-        <td style="padding:6px 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#666">Subtotal</td>
-        <td style="padding:6px 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#333;text-align:right">${formatLkr(data.subtotal)}</td>
-      </tr>
-      <tr>
-        <td style="padding:6px 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#666">Delivery Fee</td>
-        <td style="padding:6px 0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#333;text-align:right">${formatLkr(data.deliveryFee)}</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:700;color:#1a1a2e;border-top:2px solid #eee">Total</td>
-        <td style="padding:10px 0 0;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:700;color:#1a1a2e;text-align:right;border-top:2px solid #eee">${formatLkr(data.total)}</td>
+        <td style="padding:14px 18px">
+          <div style="font-family:${F};font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px">Order Number</div>
+          <div style="font-family:${F};font-size:17px;font-weight:700;color:#ffffff;margin-top:2px">${data.orderNumber}</div>
+        </td>
+        <td style="padding:14px 18px;text-align:right">
+          <div style="font-family:${F};font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px">Total</div>
+          <div style="font-family:${F};font-size:17px;font-weight:700;color:#ffffff;margin-top:2px">${formatLkr(data.total)}</div>
+        </td>
       </tr>
     </table>
 
-    <h3 style="margin:0 0 12px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:1px">Delivering To</h3>
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fbff;border:1px solid #e6eefb;border-radius:10px;padding:12px 16px;margin-bottom:24px">
-      <tr><td style="padding:4px 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#333"><strong>${data.customerName}</strong></td></tr>
-      <tr><td style="padding:4px 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#555">${data.address}</td></tr>
-      <tr><td style="padding:4px 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#555">${data.city}</td></tr>
-      <tr><td style="padding:4px 16px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#555">${data.phone}</td></tr>
+    <!-- ETA highlight -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#059669;border-radius:8px;margin-bottom:24px">
+      <tr>
+        <td style="padding:18px;text-align:center">
+          <div style="font-family:${F};font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1.5px">Estimated Delivery</div>
+          <div style="font-family:${F};font-size:26px;font-weight:700;color:#ffffff;margin-top:4px">${data.deliveryDays} Working Day${data.deliveryDays > 1 ? "s" : ""}</div>
+        </td>
+      </tr>
     </table>
 
-    <p style="margin:0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#4b5563;line-height:1.7">
-      Delivery ETA: <strong style="color:#111827">${data.deliveryDays} working day${data.deliveryDays > 1 ? "s" : ""}</strong><br/>
-      Payment Method: <strong style="color:#111827">${paymentLabel(data.paymentMethod)}</strong><br/>
-      Thank you for shopping with Aroma Notes. We can’t wait for you to enjoy your fragrance.
+    ${paymentBlock(data)}
+
+    <!-- Items -->
+    ${sectionTitle("Items in This Shipment")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:20px">
+      <tr style="background-color:#f9fafb">
+        <th style="padding:10px 14px;font-family:${F};font-size:11px;color:#6b7280;text-align:left;text-transform:uppercase;letter-spacing:0.5px">Product</th>
+        <th style="padding:10px 14px;font-family:${F};font-size:11px;color:#6b7280;text-align:center;text-transform:uppercase;letter-spacing:0.5px">Qty</th>
+        <th style="padding:10px 14px;font-family:${F};font-size:11px;color:#6b7280;text-align:right;text-transform:uppercase;letter-spacing:0.5px">Amount</th>
+      </tr>
+      ${itemRows(data.items)}
+    </table>
+
+    ${totalsBlock(data)}
+    ${deliveryBlock(data)}
+
+    <p style="margin:0;font-family:${F};font-size:13px;color:#6b7280;line-height:1.65;text-align:center">
+      Thank you for shopping with Aroma Notes.<br/>We hope your fragrance arrives perfectly and on time!
     </p>`;
 
-  return baseLayout("Your Order Has Been Shipped - Aroma Notes", body);
+  return baseLayout("Your Order Has Been Shipped - Aroma Notes", "#3b82f6", body);
 }
+
+/* ------------------------------------------------------------------ */
+/*  Senders                                                            */
+/* ------------------------------------------------------------------ */
 
 export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<void> {
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
