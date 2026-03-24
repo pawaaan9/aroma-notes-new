@@ -142,94 +142,107 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Featured Collection Section */}
-        <section id="products" className="py-20 sm:py-32 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
-          <div className="mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw] relative z-20">
-            <div className="text-center mb-20">
-              <div className="inline-block mb-6 px-6 py-3 bg-gradient-to-r from-amber-500/10 to-rose-500/10 rounded-full border border-amber-400/30 backdrop-blur-sm">
-                <span className="text-amber-700 text-sm font-medium tracking-wider uppercase font-saira">Signature Collection</span>
+        {/* Featured Collection Section — Light Creative */}
+        <section id="products" className="relative py-20 sm:py-32 bg-gradient-to-b from-white via-gray-50/80 to-white overflow-hidden">
+          {/* Soft ambient orbs */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-[500px] h-[500px] bg-amber-100/40 rounded-full blur-[120px]" />
+            <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] bg-rose-100/30 rounded-full blur-[120px]" />
+          </div>
+
+          <div className="relative z-10 mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw]">
+            {/* Section header */}
+            <div className="text-center mb-16 sm:mb-20">
+              <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full border border-amber-200/60 bg-amber-50/60 backdrop-blur-sm animate-fade-in-up">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-amber-700 text-[11px] font-semibold tracking-[0.25em] uppercase font-saira">Signature Collection</span>
               </div>
-              <h2 className="text-4xl font-bold font-smooch tracking-tight text-gray-900 sm:text-5xl lg:text-6xl mb-6 animate-fade-in-up">
-                Masterpiece Fragrances
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-smooch text-gray-900 leading-[1.1] mb-6 animate-fade-in-up delay-200">
+                Masterpiece{" "}
+                <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-rose-500 bg-clip-text text-transparent">Fragrances</span>
               </h2>
-              <p className="max-w-3xl mx-auto text-lg text-gray-600 leading-relaxed font-saira animate-fade-in-up delay-300">
+              <p className="max-w-2xl mx-auto text-base sm:text-lg text-gray-500 leading-relaxed font-saira animate-fade-in-up delay-300">
                 Each fragrance is a carefully crafted symphony of notes, designed to evoke emotions and create lasting memories.
               </p>
-              <div className="w-32 h-1 bg-gradient-to-r from-amber-500 to-rose-500 mx-auto rounded-full mt-8 animate-fade-in-up delay-500"></div>
+              <div className="w-20 h-0.5 bg-gradient-to-r from-amber-400 to-rose-400 mx-auto rounded-full mt-8 animate-fade-in-up delay-500" />
             </div>
             
             {/* Featured Products from DB */}
             <FeaturedProducts />
             
             {/* Call to Action */}
-            <div className="text-center mt-16 animate-fade-in-up delay-700">
-              <a className="group inline-block rounded-full bg-gradient-to-r from-amber-500/10 to-rose-500/10 border border-amber-400/30 px-8 py-4 text-lg font-semibold text-amber-700 hover:bg-gradient-to-r hover:from-amber-500/20 hover:to-rose-500/20 transition-all duration-300 backdrop-blur-sm font-saira" href="/products">
-                <span className="relative z-10 font-saira uppercase">View All Fragrances</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-rose-500/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="text-center mt-16 sm:mt-20 animate-fade-in-up delay-700">
+              <a
+                className="group inline-flex items-center gap-3 rounded-full bg-gray-900 px-8 py-4 text-sm font-bold font-saira text-white uppercase tracking-wider transition-all duration-300 hover:bg-gray-800 hover:shadow-xl hover:-translate-y-0.5"
+                href="/products"
+              >
+                View All Fragrances
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
               </a>
             </div>
           </div>
         </section>
         
-        {/* About Section */}
-        <section id="about" className="py-20 sm:py-32 bg-white relative overflow-hidden">
-          {/* Perfume Essence Background Elements */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-10 right-10 w-48 h-48 bg-amber-800/3 rounded-full blur-3xl animate-float-slow"></div>
-            <div className="absolute top-15 right-15 w-32 h-32 bg-amber-700/2 rounded-full blur-2xl animate-float-slow delay-800"></div>
-            <div className="absolute bottom-10 left-10 w-40 h-40 bg-gray-200/3 rounded-full blur-3xl animate-float-reverse"></div>
-            <div className="absolute bottom-15 left-15 w-28 h-28 bg-gray-100/2 rounded-full blur-2xl animate-float-reverse delay-500"></div>
-            <div className="absolute top-1/2 left-1/2 w-36 h-36 bg-white/2 rounded-full blur-3xl animate-float-slow delay-1200"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-rose-200/3 rounded-full blur-3xl animate-float-reverse delay-1000"></div>
-          </div>
-          
-          <div className="mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw] relative z-20">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div className="animate-fade-in-up">
-                <div className="inline-block mb-6 px-4 py-2 bg-gradient-to-r from-amber-500/10 to-rose-500/10 rounded-full border border-amber-400/30 backdrop-blur-sm">
-                  <span className="text-amber-700 text-sm font-medium tracking-wider uppercase font-saira">Our Craft</span>
-                </div>
-                <h2 className="text-4xl font-bold font-smooch tracking-tight text-gray-900 sm:text-5xl mb-6">
-                  The Art of Perfumery
-                </h2>
-                <p className="text-lg text-gray-600 leading-relaxed font-saira mb-8">
-                  At Aroma Notes, we believe that fragrance is more than just a scent—it&apos;s an expression of personality, 
-                  a memory in a bottle, and a journey of the senses. Our master perfumers combine traditional techniques 
-                  with innovative approaches to create unique olfactory experiences.
-                </p>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                    <span className="text-gray-700 font-saira">Hand-selected ingredients from around the world</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                    <span className="text-gray-700 font-saira">Small-batch production for exceptional quality</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                    <span className="text-gray-700 font-saira">Sustainable and ethical sourcing practices</span>
-                  </div>
-                </div>
+        {/* About Section — Single Immersive Image */}
+        <section id="about" className="relative min-h-[85vh] sm:min-h-[90vh] overflow-hidden">
+          {/* Background image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('/forhimafter.webp')" }}
+          />
+          {/* Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/20 to-transparent h-32 sm:h-40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/20 sm:from-black/80 sm:via-black/40 sm:to-transparent" />
+          <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-white to-transparent" />
+
+          {/* Content */}
+          <div className="relative z-10 mx-auto max-w-none px-5 sm:px-6 lg:px-[5vw] flex items-center min-h-[85vh] sm:min-h-[90vh]">
+            <div className="max-w-md sm:max-w-lg py-20">
+              {/* Tag */}
+              <div className="inline-flex items-center gap-2 mb-6 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-sm">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-amber-300 text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] uppercase font-saira">Our Craft</span>
               </div>
-              <div className="animate-fade-in-up delay-300">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-rose-500/20 rounded-2xl blur-3xl"></div>
-                    <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-8 border border-amber-400/20 backdrop-blur-sm">
-                    <div className="text-center">
-                      <div className="inline-block p-6 bg-gradient-to-b from-amber-500/10 to-rose-500/10 rounded-full border border-amber-400/30 mb-6">
-                        <svg className="w-12 h-12 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
-                        </svg>
-                      </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Craftsmanship</h3>
-                      <p className="text-gray-700 font-saira">
-                        Every bottle is a testament to our commitment to excellence and attention to detail.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+
+              {/* Heading */}
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-smooch text-white leading-[1.1] mb-5">
+                The Art of{" "}
+                <span className="bg-gradient-to-r from-amber-400 via-orange-300 to-rose-400 bg-clip-text text-transparent">Perfumery</span>
+              </h2>
+
+              {/* Body */}
+              <p className="text-sm sm:text-base text-gray-300 leading-relaxed font-saira mb-8">
+                Fragrance is more than just a scent — it&apos;s an expression of personality, a memory in a bottle,
+                and a journey of the senses. We blend tradition with innovation to craft unforgettable experiences.
+              </p>
+
+              {/* Feature pills */}
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-10">
+                {[
+                  "Hand-Selected Ingredients",
+                  "Small-Batch Production",
+                  "Ethically Sourced",
+                  "100% Authentic",
+                ].map((tag) => (
+                  <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-[10px] sm:text-xs font-medium text-gray-300 font-saira">
+                    <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-amber-400" />
+                    {tag}
+                  </span>
+                ))}
               </div>
+
+              {/* CTA */}
+              <a
+                href="/products"
+                className="group inline-flex items-center gap-3 rounded-full bg-white px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold font-saira text-gray-900 uppercase tracking-wider transition-all duration-300 hover:bg-amber-50 hover:shadow-2xl hover:shadow-amber-500/10 hover:-translate-y-0.5"
+              >
+                Explore Collection
+                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
             </div>
           </div>
         </section>
