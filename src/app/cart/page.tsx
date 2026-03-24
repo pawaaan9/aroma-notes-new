@@ -177,17 +177,17 @@ export default function CartPage() {
 
                   <Link
                     href="/checkout"
-                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-saira font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-lg"
+                    className="mt-6 flex w-full items-center justify-center gap-2.5 rounded-full bg-gray-900 py-3.5 font-saira text-sm font-semibold tracking-wide text-white transition-all duration-200 hover:bg-gray-800 hover:shadow-lg active:scale-[0.98]"
                   >
                     Proceed to Checkout
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </Link>
 
                   <Link
                     href="/products"
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-300 py-3 font-saira font-medium text-gray-700 transition-all hover:bg-gray-100"
+                    className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-full py-3 font-saira text-sm font-medium text-gray-500 transition-all duration-200 hover:text-gray-900"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

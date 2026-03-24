@@ -36,13 +36,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const parsed: CartItem[] = JSON.parse(raw);
         if (Array.isArray(parsed)) setItems(parsed);
       }
-    } catch {}
+    } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch {}
+    const id = requestAnimationFrame(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      } catch {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        } catch { /* give up */ }
+      }
+    });
+    return () => cancelAnimationFrame(id);
   }, [items]);
 
   const addItem: CartContextValue["addItem"] = (item, qty = 1) => {

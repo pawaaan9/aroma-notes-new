@@ -109,7 +109,6 @@ export default function Header({ currentPage = 'home', dark = false }: HeaderPro
           <nav className="hidden md:flex flex-1 justify-center items-center gap-8 lg:gap-12">
             <Link className={navLinkClass("home")} href="/">Home</Link>
             <Link className={navLinkClass("products")} href="/products">Products</Link>
-            <Link className={navLinkClass("about")} href="/about">About</Link>
           </nav>
           <Link className="md:hidden absolute left-[calc(50%-20px)] top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2" href="/">
             <Image src="/logo-2.png" alt="Aroma Notes Logo" width={36} height={36} className="h-9 w-9" priority />
@@ -158,7 +157,6 @@ export default function Header({ currentPage = 'home', dark = false }: HeaderPro
             <nav className="hidden md:flex flex-1 justify-center items-center gap-8 lg:gap-12">
               <Link className={navLinkClass("home")} href="/">Home</Link>
               <Link className={navLinkClass("products")} href="/products">Products</Link>
-              <Link className={navLinkClass("about")} href="/about">About</Link>
             </nav>
 
             <Link className="md:hidden absolute left-[calc(50%-20px)] top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2" href="/">
@@ -278,7 +276,6 @@ export default function Header({ currentPage = 'home', dark = false }: HeaderPro
             <nav className="flex-1 px-4 py-6">
               <Link href="/" className={linkClass("home")} onClick={toggleMobileMenu}>Home</Link>
               <Link href="/products" className={linkClass("products")} onClick={toggleMobileMenu}>Products</Link>
-              <Link href="/about" className={linkClass("about")} onClick={toggleMobileMenu}>About</Link>
             </nav>
           </aside>
         </>

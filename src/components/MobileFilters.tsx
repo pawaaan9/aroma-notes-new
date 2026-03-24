@@ -64,39 +64,42 @@ export default function MobileFilters({
       {/* Overlay */}
       {open && mounted ? (
         createPortal(
-          <div className="fixed inset-0 z-[9999]">
+          <>
             <div
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              className="fixed inset-0 z-[200] bg-black/25 backdrop-blur-md transition-opacity"
               onClick={() => setOpen(false)}
+              aria-hidden
             />
 
-            {/* Drawer */}
-            <div className="absolute inset-y-0 right-0 w-[85vw] max-w-[360px] h-full bg-white shadow-2xl flex flex-col overflow-y-auto animate-slide-in-right">
+            <div
+              className="fixed top-0 right-0 bottom-0 z-[201] w-[min(85vw,380px)] bg-white shadow-2xl flex flex-col rounded-tl-2xl rounded-bl-2xl overflow-hidden animate-slide-in-right"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Filters"
+            >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-4 border-b">
-                <h3 className="text-sm font-semibold tracking-[0.2em] text-gray-800">FILTERS</h3>
+              <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-white shrink-0">
+                <h2 className="text-lg font-bold font-saira uppercase text-gray-900">Filters</h2>
                 <button
                   onClick={() => setOpen(false)}
-                  className="rounded-full bg-gray-100 p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200"
+                  className="p-2 -m-2 text-gray-500 hover:text-gray-800 rounded-lg transition-colors"
                   aria-label="Close filters"
                 >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 18L18 6M6 6l12 12" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
-              {/* Sections */}
-              <div className="px-4 py-3 space-y-6">
+              {/* Content */}
+              <div className="flex-1 px-4 py-3 space-y-4">
                 {/* Availability */}
                 <section>
-                  <div className="mb-3 flex items-center justify-between">
-                    <h4 className="text-xs font-semibold tracking-[0.2em] text-gray-700">AVAILABILITY</h4>
-                  </div>
+                  <h4 className="mb-2 text-[11px] font-semibold tracking-[0.15em] text-gray-500 uppercase font-saira">Availability</h4>
                   <label className="flex items-center gap-3 text-sm text-gray-700 font-saira">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 accent-primary font-saira"
+                      className="h-4 w-4 rounded border-gray-300 accent-gray-900"
                       checked={inStockOnly}
                       onChange={(e) => setInStockOnly(e.target.checked)}
                     />
@@ -106,24 +109,22 @@ export default function MobileFilters({
 
                 {/* Price */}
                 <section>
-                  <div className="mb-3 flex items-center justify-between">
-                    <h4 className="text-xs font-semibold tracking-[0.2em] text-gray-700">PRICE</h4>
-                  </div>
-                  <div className="flex items-center gap-3">
+                  <h4 className="mb-2 text-[11px] font-semibold tracking-[0.15em] text-gray-500 uppercase font-saira">Price</h4>
+                  <div className="flex items-center gap-2">
                     <input
                       type="number"
                       min={0}
-                      className="w-32 rounded-md border border-gray-300 bg-white text-gray-900 placeholder-gray-400 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/30"
+                      className="w-[92px] rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-2.5 py-1.5 text-xs font-saira focus:border-gray-400 focus:ring-1 focus:ring-gray-300 outline-none"
                       placeholder="Min"
                       inputMode="numeric"
                       value={priceMin ?? ""}
                       onChange={(e) => setPriceMin(e.target.value ? Number(e.target.value) : undefined)}
                     />
-                    <span className="text-gray-400">to</span>
+                    <span className="text-xs text-gray-400 font-saira">to</span>
                     <input
                       type="number"
                       min={0}
-                      className="w-32 rounded-md border border-gray-300 bg-white text-gray-900 placeholder-gray-400 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/30"
+                      className="w-[92px] rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-2.5 py-1.5 text-xs font-saira focus:border-gray-400 focus:ring-1 focus:ring-gray-300 outline-none"
                       placeholder="Max"
                       inputMode="numeric"
                       value={priceMax ?? ""}
@@ -134,59 +135,39 @@ export default function MobileFilters({
 
                 {/* Gender */}
                 <section>
-                  <div className="mb-3 flex items-center justify-between">
-                    <h4 className="text-xs font-semibold tracking-[0.2em] text-gray-700">GENDER</h4>
-                  </div>
-                  <div className="space-y-2 text-sm text-gray-700 font-saira">
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 accent-primary"
-                        checked={gender.female}
-                        onChange={(e) => setGender({ ...gender, female: e.target.checked })}
-                      />
-                      Female
-                    </label>
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 accent-primary"
-                        checked={gender.male}
-                        onChange={(e) => setGender({ ...gender, male: e.target.checked })}
-                      />
-                      Male
-                    </label>
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 accent-primary"
-                        checked={gender.unisex}
-                        onChange={(e) => setGender({ ...gender, unisex: e.target.checked })}
-                      />
-                      Unisex
-                    </label>
+                  <h4 className="mb-2 text-[11px] font-semibold tracking-[0.15em] text-gray-500 uppercase font-saira">Gender</h4>
+                  <div className="space-y-1.5">
+                    {(["female", "male", "unisex"] as GenderKey[]).map((g) => (
+                      <label key={g} className="flex items-center gap-3 text-sm text-gray-700 font-saira capitalize">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                          checked={gender[g]}
+                          onChange={(e) => setGender({ ...gender, [g]: e.target.checked })}
+                        />
+                        {g}
+                      </label>
+                    ))}
                   </div>
                 </section>
 
-                {/* Brand */}
+                {/* Brand Inspiration */}
                 <section>
-                  <div className="mb-3 flex items-center justify-between">
-                    <h4 className="text-xs font-semibold tracking-[0.2em] text-gray-700">BRAND INSPIRATION</h4>
-                  </div>
-                  <div className="space-y-2 text-sm text-gray-700 font-saira">
-                    <label className="flex items-center gap-3">
+                  <h4 className="mb-2 text-[11px] font-semibold tracking-[0.15em] text-gray-500 uppercase font-saira">Brand Inspiration</h4>
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-3 text-sm text-gray-700 font-saira">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 accent-primary"
+                        className="h-4 w-4 rounded border-gray-300 accent-gray-900"
                         checked={perfumeType.originals}
                         onChange={(e) => setPerfumeType({ ...perfumeType, originals: e.target.checked })}
                       />
                       YB Originals
                     </label>
-                    <label className="flex items-center gap-3">
+                    <label className="flex items-center gap-3 text-sm text-gray-700 font-saira">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 accent-primary"
+                        className="h-4 w-4 rounded border-gray-300 accent-gray-900"
                         checked={perfumeType.inspired}
                         onChange={(e) => setPerfumeType({ ...perfumeType, inspired: e.target.checked })}
                       />
@@ -197,16 +178,16 @@ export default function MobileFilters({
               </div>
 
               {/* Footer */}
-              <div className="border-t p-4">
+              <div className="border-t border-gray-200 bg-white p-4 shrink-0">
                 <button
                   onClick={() => setOpen(false)}
-                  className="w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-900 font-saira uppercase"
+                  className="block w-full py-3 px-4 rounded-lg bg-gray-900 text-white font-saira font-semibold text-center hover:bg-gray-800 transition-colors uppercase"
                 >
-                  VIEW RESULTS
+                  View Results
                 </button>
               </div>
             </div>
-          </div>,
+          </>,
           document.body
         )
       ) : null}

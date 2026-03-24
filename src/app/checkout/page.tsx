@@ -116,16 +116,18 @@ export default function CheckoutPage() {
   const grandTotal = total + deliveryFee;
 
   useEffect(() => {
-    try {
-      const key = "aroma-notes:checkout-form";
-      try { localStorage.setItem(key, JSON.stringify(form)); } catch {
-        // QUOTA_EXCEEDED – clear stale entries and retry once
-        try {
-          localStorage.removeItem(key);
-          localStorage.setItem(key, JSON.stringify(form));
-        } catch { /* give up silently */ }
-      }
-    } catch { /* ignore */ }
+    const id = requestAnimationFrame(() => {
+      try {
+        const key = "aroma-notes:checkout-form";
+        try { localStorage.setItem(key, JSON.stringify(form)); } catch {
+          try {
+            localStorage.removeItem(key);
+            localStorage.setItem(key, JSON.stringify(form));
+          } catch { /* give up */ }
+        }
+      } catch { /* ignore */ }
+    });
+    return () => cancelAnimationFrame(id);
   }, [form]);
 
   const handleChange = (
