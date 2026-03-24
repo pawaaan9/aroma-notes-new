@@ -387,6 +387,7 @@ export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // Real-time subscription — hide PayZy orders that haven't been paid yet
   useEffect(() => {
@@ -497,9 +498,52 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Tabs + Search */}
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-1 overflow-x-auto rounded-xl bg-gray-800/60 p-1">
+      {/* Filters + Search */}
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* Mobile: custom dropdown filter */}
+        <div className="relative sm:hidden">
+          <button
+            onClick={() => setFilterOpen((v) => !v)}
+            className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-gray-800/60 px-4 py-2.5 text-sm font-medium text-white outline-none transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 font-saira"
+          >
+            <span className="flex items-center gap-2">
+              {tabs.find((t) => t.key === activeTab)?.label ?? "All"}
+              <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-400">
+                {tabs.find((t) => t.key === activeTab)?.count ?? 0}
+              </span>
+            </span>
+            <svg className={`h-4 w-4 text-gray-400 transition-transform ${filterOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {filterOpen && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setFilterOpen(false)} />
+              <div className="absolute left-0 right-0 top-full z-40 mt-1.5 overflow-hidden rounded-xl border border-white/10 bg-gray-800 shadow-xl shadow-black/40">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => { setActiveTab(tab.key); setFilterOpen(false); }}
+                    className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium transition-colors font-saira ${
+                      activeTab === tab.key
+                        ? "bg-white/10 text-white"
+                        : "text-gray-400 hover:bg-white/5 hover:text-white"
+                    }`}
+                  >
+                    {tab.label}
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                      activeTab === tab.key ? "bg-amber-500/20 text-amber-400" : "bg-gray-700 text-gray-500"
+                    }`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        {/* Desktop: tab buttons */}
+        <div className="hidden gap-1 overflow-x-auto rounded-xl bg-gray-800/60 p-1 sm:flex">
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -537,110 +581,114 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-gray-800/50 backdrop-blur-sm">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
-              <p className="text-sm text-gray-400 font-saira">Loading orders...</p>
-            </div>
+      {/* Orders */}
+      {loading ? (
+        <div className="mt-6 flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
+            <p className="text-sm text-gray-400 font-saira">Loading orders...</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">
-                    Order ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">
-                    Customer
-                  </th>
-                  <th className="hidden px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira md:table-cell">
-                    Products
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">
-                    Total
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">
-                    Status
-                  </th>
-                  <th className="hidden px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira lg:table-cell">
-                    Payment
-                  </th>
-                  <th className="hidden px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira sm:table-cell">
-                    Date
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-700/50">
-                          <svg className="h-8 w-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                          </svg>
-                        </div>
-                        <p className="text-sm font-medium text-gray-400 font-saira">
-                          {search ? "No orders match your search" : "No orders yet"}
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500 font-saira">
-                          {search
-                            ? "Try a different search term"
-                            : "Orders will appear here when customers make purchases"}
-                        </p>
-                      </div>
-                    </td>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="mt-6 rounded-2xl border border-white/10 bg-gray-800/50 px-6 py-16 text-center">
+          <div className="flex flex-col items-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-700/50">
+              <svg className="h-8 w-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-gray-400 font-saira">
+              {search ? "No orders match your search" : "No orders yet"}
+            </p>
+            <p className="mt-1 text-xs text-gray-500 font-saira">
+              {search ? "Try a different search term" : "Orders will appear here when customers make purchases"}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Mobile: order cards */}
+          <div className="mt-4 space-y-3 sm:hidden">
+            {filtered.map((order) => (
+              <div
+                key={order.id}
+                className="overflow-hidden rounded-xl border border-white/10 bg-gray-800/60"
+                onClick={() => setSelectedOrder(order)}
+              >
+                <div className="flex items-center justify-between border-b border-white/5 bg-gray-900/40 px-4 py-2.5">
+                  <span className="text-sm font-bold text-amber-400 font-saira">{order.orderNumber}</span>
+                  <span className="text-[11px] text-gray-500 font-saira">{formatDate(order.createdAt)}</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-white font-saira">{order.customer.name}</p>
+                      <p className="text-xs text-gray-400 font-saira">{order.customer.phone}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500 font-saira">Total</p>
+                      <p className="text-base font-bold text-white font-saira">{formatLkr(order.total)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge status={order.status} />
+                      <PaymentBadge method={order.paymentMethod} />
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedOrder(order);
+                      }}
+                      className="rounded-lg bg-amber-500/20 px-4 py-1.5 text-xs font-semibold text-amber-400 transition-colors hover:bg-amber-500/30 font-saira"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="mt-6 hidden overflow-hidden rounded-2xl border border-white/10 bg-gray-800/50 backdrop-blur-sm sm:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">Order ID</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">Customer</th>
+                    <th className="hidden px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira md:table-cell">Products</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">Total</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">Status</th>
+                    <th className="hidden px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira lg:table-cell">Payment</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">Date</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-400 font-saira">Actions</th>
                   </tr>
-                ) : (
-                  filtered.map((order) => (
+                </thead>
+                <tbody>
+                  {filtered.map((order) => (
                     <tr
                       key={order.id}
                       className="border-b border-white/5 transition-colors hover:bg-white/[0.02] cursor-pointer"
                       onClick={() => setSelectedOrder(order)}
                     >
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-amber-400 font-saira">
-                          {order.orderNumber}
-                        </span>
+                        <span className="text-sm font-semibold text-amber-400 font-saira">{order.orderNumber}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <div>
-                          <p className="text-sm font-medium text-white font-saira">
-                            {order.customer.name}
-                          </p>
-                          <p className="text-xs text-gray-400 font-saira">
-                            {order.customer.phone}
-                          </p>
-                        </div>
+                        <p className="text-sm font-medium text-white font-saira">{order.customer.name}</p>
+                        <p className="text-xs text-gray-400 font-saira">{order.customer.phone}</p>
                       </td>
                       <td className="hidden px-6 py-4 md:table-cell">
                         <div className="flex items-center">
-                          {/* Stack product images */}
                           <div className="flex -space-x-2">
                             {order.items.slice(0, 3).map((item, i) => (
-                              <div
-                                key={i}
-                                className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-gray-800 bg-gray-700"
-                              >
+                              <div key={i} className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-gray-800 bg-gray-700">
                                 {item.imageUrl ? (
-                                  <Image
-                                    src={item.imageUrl}
-                                    alt={item.name}
-                                    fill
-                                    className="object-cover"
-                                    sizes="32px"
-                                  />
+                                  <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="32px" />
                                 ) : (
-                                  <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">
-                                    {item.name[0]}
-                                  </div>
+                                  <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">{item.name[0]}</div>
                                 )}
                               </div>
                             ))}
@@ -651,46 +699,34 @@ export default function OrdersPage() {
                             )}
                           </div>
                           <span className="ml-2 text-xs text-gray-400 font-saira">
-                            {order.items.reduce((s, it) => s + it.quantity, 0)} item
-                            {order.items.reduce((s, it) => s + it.quantity, 0) > 1 ? "s" : ""}
+                            {order.items.reduce((s, it) => s + it.quantity, 0)} item{order.items.reduce((s, it) => s + it.quantity, 0) > 1 ? "s" : ""}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-white font-saira">
-                          {formatLkr(order.total)}
-                        </span>
+                        <span className="text-sm font-semibold text-white font-saira">{formatLkr(order.total)}</span>
                       </td>
+                      <td className="px-6 py-4"><StatusBadge status={order.status} /></td>
+                      <td className="hidden px-6 py-4 lg:table-cell"><PaymentBadge method={order.paymentMethod} /></td>
                       <td className="px-6 py-4">
-                        <StatusBadge status={order.status} />
-                      </td>
-                      <td className="hidden px-6 py-4 lg:table-cell">
-                        <PaymentBadge method={order.paymentMethod} />
-                      </td>
-                      <td className="hidden px-6 py-4 sm:table-cell">
-                        <span className="text-xs text-gray-400 font-saira">
-                          {formatDate(order.createdAt)}
-                        </span>
+                        <span className="text-xs text-gray-400 font-saira">{formatDate(order.createdAt)}</span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedOrder(order);
-                          }}
+                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
                           className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white font-saira"
                         >
                           View
                         </button>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Order detail modal */}
       {selectedOrder && (
