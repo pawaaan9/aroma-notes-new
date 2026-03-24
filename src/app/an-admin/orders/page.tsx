@@ -107,16 +107,34 @@ function OrderDetailModal({
 }: {
   order: Order;
   onClose: () => void;
-  onStatusChange: (orderId: string, status: OrderStatus) => Promise<void>;
+  onStatusChange: (orderId: string, status: OrderStatus, deliveryDays?: number) => Promise<void>;
 }) {
   const [updating, setUpdating] = useState(false);
   const [slipExpanded, setSlipExpanded] = useState(false);
+  const [showCourierPopup, setShowCourierPopup] = useState(false);
+  const [deliveryDays, setDeliveryDays] = useState("3");
   const canCancelOrder = !isPaidPayzyOrder(order);
 
   const handleStatus = async (status: OrderStatus) => {
+    if (status === "sent_to_courier") {
+      setShowCourierPopup(true);
+      return;
+    }
     setUpdating(true);
     try {
       await onStatusChange(order.id, status);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const confirmCourier = async () => {
+    const days = parseInt(deliveryDays, 10);
+    if (!days || days < 1) return;
+    setUpdating(true);
+    try {
+      await onStatusChange(order.id, "sent_to_courier", days);
+      setShowCourierPopup(false);
     } finally {
       setUpdating(false);
     }
@@ -196,8 +214,11 @@ function OrderDetailModal({
                 <button
                   disabled={updating}
                   onClick={() => handleStatus("sent_to_courier")}
-                  className="rounded-lg bg-emerald-500/20 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/30 disabled:opacity-50 font-saira"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-900/40 transition-all hover:-translate-y-0.5 hover:bg-emerald-400 hover:shadow-emerald-800/50 disabled:translate-y-0 disabled:opacity-50 font-saira"
                 >
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
                   Handed to Courier
                 </button>
               )}
@@ -373,6 +394,51 @@ function OrderDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Courier delivery days popup */}
+      {showCourierPopup && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowCourierPopup(false)} />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-gray-900 p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-white font-saira">Handed to Courier</h3>
+            <p className="mt-1 text-sm text-gray-400 font-saira">
+              How many working days will it take to deliver this order?
+            </p>
+            <div className="mt-4">
+              <label className="mb-1.5 block text-xs font-medium text-gray-400 font-saira uppercase tracking-wider">
+                Estimated Delivery Days
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={30}
+                value={deliveryDays}
+                onChange={(e) => setDeliveryDays(e.target.value)}
+                className="w-full appearance-none rounded-xl border border-white/10 bg-gray-800 px-4 py-3 text-center text-2xl font-bold text-white outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 font-saira"
+              />
+              <p className="mt-1.5 text-xs text-gray-500 font-saira">
+                The customer will be notified via email with this delivery estimate.
+              </p>
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setShowCourierPopup(false)}
+                disabled={updating}
+                className="flex-1 rounded-xl border border-white/10 bg-gray-800 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-700 disabled:opacity-50 font-saira"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmCourier}
+                disabled={updating || !deliveryDays || parseInt(deliveryDays, 10) < 1}
+                className="flex-1 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 font-saira"
+              >
+                {updating ? "Sending..." : "Confirm & Notify"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -444,7 +510,7 @@ export default function OrdersPage() {
     { key: "cancelled", label: "Cancelled", count: counts.cancelled },
   ];
 
-  const handleStatusChange = async (orderId: string, status: OrderStatus) => {
+  const handleStatusChange = async (orderId: string, status: OrderStatus, deliveryDays?: number) => {
     if (status === "cancelled") {
       const targetOrder = orders.find((o) => o.id === orderId);
       if (targetOrder && isPaidPayzyOrder(targetOrder)) {
@@ -453,9 +519,37 @@ export default function OrdersPage() {
     }
 
     await updateOrderStatus(orderId, status);
-    // The real-time listener will automatically update the UI
-    // Also update the selected order view
     setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, status } : prev));
+
+    if (status === "sent_to_courier" && deliveryDays) {
+      const targetOrder = orders.find((o) => o.id === orderId);
+      if (targetOrder?.customer.email) {
+        fetch("/api/email/shipped", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderNumber: targetOrder.orderNumber,
+            customerName: targetOrder.customer.name,
+            customerEmail: targetOrder.customer.email,
+            items: targetOrder.items.map((it) => ({
+              name: it.name,
+              brand: it.brand ?? null,
+              size: it.size ?? null,
+              quantity: it.quantity,
+              price: it.price,
+            })),
+            subtotal: targetOrder.subtotal,
+            deliveryFee: targetOrder.deliveryFee,
+            total: targetOrder.total,
+            paymentMethod: targetOrder.paymentMethod,
+            address: targetOrder.customer.address,
+            city: targetOrder.customer.city,
+            phone: targetOrder.customer.phone,
+            deliveryDays,
+          }),
+        }).catch(() => {});
+      }
+    }
   };
 
   return (

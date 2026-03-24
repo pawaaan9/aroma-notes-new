@@ -273,6 +273,31 @@ export default function CheckoutPage() {
       setOrderPlaced({ orderNumber: order.orderNumber, total: order.total, paymentMethod });
       clear();
       localStorage.removeItem("aroma-notes:checkout-form");
+
+      // Fire-and-forget order confirmation email
+      fetch("/api/email/order-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber: order.orderNumber,
+          customerName: customer.name,
+          customerEmail: customer.email,
+          items: orderItems.map((it) => ({
+            name: it.name,
+            brand: it.brand ?? null,
+            size: it.size ?? null,
+            quantity: it.quantity,
+            price: it.price,
+          })),
+          subtotal: total,
+          deliveryFee,
+          total: grandTotal,
+          paymentMethod,
+          address: customer.address,
+          city: customer.city,
+          phone: customer.phone,
+        }),
+      }).catch(() => {});
     } catch (err) {
       console.error("Order failed:", err);
       alert("Something went wrong placing your order. Please try again.");

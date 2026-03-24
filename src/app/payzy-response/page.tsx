@@ -84,13 +84,42 @@ function PayzyResponseContent() {
           updatedAt: serverTimestamp(),
         });
 
+        const orderNum = orderData?.orderNumber ?? orderId;
         setResult({
           status: "success",
-          orderNumber: orderData?.orderNumber ?? orderId,
+          orderNumber: orderNum,
           total: orderData?.total,
         });
         clear();
         sessionStorage.removeItem("payzyData");
+
+        // Fire-and-forget order confirmation email
+        if (orderData?.customer?.email) {
+          const items = (orderData.items ?? []).map((it: Record<string, unknown>) => ({
+            name: it.name ?? "",
+            brand: (it.brand as string | undefined) ?? null,
+            size: (it.size as string | undefined) ?? null,
+            quantity: Number(it.quantity) || 1,
+            price: Number(it.price) || 0,
+          }));
+          fetch("/api/email/order-confirmation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderNumber: orderNum,
+              customerName: orderData.customer.name ?? "Customer",
+              customerEmail: orderData.customer.email,
+              items,
+              subtotal: Number(orderData.subtotal) || 0,
+              deliveryFee: Number(orderData.deliveryFee) || 0,
+              total: Number(orderData.total) || 0,
+              paymentMethod: "payzy",
+              address: orderData.customer.address ?? "",
+              city: orderData.customer.city ?? "",
+              phone: orderData.customer.phone ?? "",
+            }),
+          }).catch(() => {});
+        }
       } catch {
         setResult({
           status: "success",
