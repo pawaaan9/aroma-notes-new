@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Image from "next/image";
@@ -8,12 +8,34 @@ import { fetchAllProducts } from "@/lib/firestore-products";
 import { subscribeToOrders, type Order } from "@/lib/orders";
 import { subscribeToCustomers } from "@/lib/customers";
 import { formatLkr } from "@/utils/currency";
+import dynamic from "next/dynamic";
+
+const RechartsArea = dynamic(
+  () => import("recharts").then((m) => m.AreaChart),
+  { ssr: false },
+);
+const RechartsBar = dynamic(
+  () => import("recharts").then((m) => m.BarChart),
+  { ssr: false },
+);
+const Area = dynamic(() => import("recharts").then((m) => m.Area), { ssr: false });
+const Bar = dynamic(() => import("recharts").then((m) => m.Bar), { ssr: false });
+const XAxis = dynamic(() => import("recharts").then((m) => m.XAxis), { ssr: false });
+const YAxis = dynamic(() => import("recharts").then((m) => m.YAxis), { ssr: false });
+const CartesianGrid = dynamic(() => import("recharts").then((m) => m.CartesianGrid), { ssr: false });
+const Tooltip = dynamic(() => import("recharts").then((m) => m.Tooltip), { ssr: false });
+const ResponsiveContainer = dynamic(
+  () => import("recharts").then((m) => m.ResponsiveContainer),
+  { ssr: false },
+);
 
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [productCount, setProductCount] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
   const [customerCount, setCustomerCount] = useState(0);
+  const [revenueRange, setRevenueRange] = useState<"7d" | "30d" | "year">("7d");
+  const [ordersRange, setOrdersRange] = useState<"7d" | "30d" | "year">("7d");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -66,6 +88,81 @@ export default function AdminDashboard() {
     .filter((o) => o.status === "sent_to_courier" && o.createdAt >= startOfMonth && o.createdAt < endOfMonth)
     .reduce((sum, o) => sum + o.total, 0);
   const recentOrders = orders.slice(0, 5);
+
+  // --- Chart data builder ---
+  function buildChartData(range: "7d" | "30d" | "year") {
+    if (range === "year") {
+      // Jan to Dec of current year
+      const months: { label: string; start: Date; end: Date }[] = [];
+      for (let m = 0; m < 12; m++) {
+        const s = new Date(today.getFullYear(), m, 1);
+        const e = new Date(today.getFullYear(), m + 1, 1);
+        months.push({ label: s.toLocaleDateString("en-US", { month: "short" }), start: s, end: e });
+      }
+      return months.map(({ label, start, end }) => {
+        const matched = orders.filter((o) => o.createdAt >= start && o.createdAt < end && o.status !== "cancelled");
+        return { name: label, revenue: matched.reduce((s, o) => s + o.total, 0), orders: matched.length };
+      });
+    }
+    if (range === "30d") {
+      // 1st to last day of current month
+      const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      const buckets: { label: string; date: Date }[] = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dt = new Date(today.getFullYear(), today.getMonth(), d);
+        buckets.push({ label: String(d), date: dt });
+      }
+      return buckets.map(({ label, date }) => {
+        const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(date); dayEnd.setHours(23, 59, 59, 999);
+        const matched = orders.filter((o) => o.createdAt >= dayStart && o.createdAt <= dayEnd && o.status !== "cancelled");
+        return { name: label, revenue: matched.reduce((s, o) => s + o.total, 0), orders: matched.length };
+      });
+    }
+    // Mon to Sun of current week
+    const monday = new Date(today);
+    const dayOfWeek = monday.getDay();
+    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    monday.setDate(monday.getDate() - diff);
+    monday.setHours(0, 0, 0, 0);
+    const buckets: { label: string; date: Date }[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      buckets.push({ label: d.toLocaleDateString("en-US", { weekday: "short" }), date: d });
+    }
+    return buckets.map(({ label, date }) => {
+      const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(date); dayEnd.setHours(23, 59, 59, 999);
+      const matched = orders.filter((o) => o.createdAt >= dayStart && o.createdAt <= dayEnd && o.status !== "cancelled");
+      return { name: label, revenue: matched.reduce((s, o) => s + o.total, 0), orders: matched.length };
+    });
+  }
+
+  const revenueChartData = useMemo(() => buildChartData(revenueRange), [orders, today, revenueRange]); // eslint-disable-line react-hooks/exhaustive-deps
+  const ordersChartData = useMemo(() => buildChartData(ordersRange), [orders, today, ordersRange]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const revRangeLabel = revenueRange === "7d" ? "This Week" : revenueRange === "30d" ? "This Month" : "This Year";
+  const ordRangeLabel = ordersRange === "7d" ? "This Week" : ordersRange === "30d" ? "This Month" : "This Year";
+
+  const ordersByMethod = useMemo(() => {
+    const nonCancelled = orders.filter((o) => o.status !== "cancelled");
+    const cod = nonCancelled.filter((o) => o.paymentMethod === "cod").length;
+    const bank = nonCancelled.filter((o) => o.paymentMethod === "bank_deposit").length;
+    const payzy = nonCancelled.filter((o) => o.paymentMethod === "payzy").length;
+    return [
+      { name: "COD", value: cod, color: "#f59e0b" },
+      { name: "Bank", value: bank, color: "#3b82f6" },
+      { name: "PayZy", value: payzy, color: "#06b6d4" },
+    ];
+  }, [orders]);
+
+  const statusBreakdown = useMemo(() => {
+    const pending = orders.filter((o) => o.status === "pending").length;
+    const processing = orders.filter((o) => o.status === "processing").length;
+    const shipped = orders.filter((o) => o.status === "sent_to_courier").length;
+    const cancelled = orders.filter((o) => o.status === "cancelled").length;
+    return { pending, processing, shipped, cancelled };
+  }, [orders]);
 
   const statCards = [
     {
@@ -123,7 +220,7 @@ export default function AdminDashboard() {
       {/* Top Header Card - Gradient Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-600 via-rose-500 to-purple-600 p-6 shadow-xl">
         <div className="relative z-10 flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-black/30 backdrop-blur-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-black backdrop-blur-sm">
             <Image
               src="/logo-2.png"
               alt="Aroma Notes"
@@ -160,6 +257,149 @@ export default function AdminDashboard() {
             <p className="mt-1 text-xs text-gray-500 font-saira">{card.sub}</p>
           </div>
         ))}
+      </div>
+
+      {/* Charts Section */}
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Revenue Area Chart */}
+        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-gray-800/50 p-6 backdrop-blur-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 className="text-base font-semibold text-white font-saira">Revenue ({revRangeLabel})</h2>
+              <p className="text-xs text-gray-400 font-saira mt-0.5">{revenueRange === "year" ? "Monthly" : "Daily"} revenue trend</p>
+            </div>
+            <div className="flex items-center gap-1 rounded-xl bg-white/5 p-1 border border-white/10">
+              {([["7d", "Week"], ["30d", "Month"], ["year", "Year"]] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setRevenueRange(key)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all font-saira ${
+                    revenueRange === key
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="overflow-x-auto -mx-2 px-2">
+            <div className="h-[240px]" style={{ minWidth: revenueRange === "30d" ? 800 : 500 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsArea data={revenueChartData}>
+                  <defs>
+                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="name" tick={{ fill: "#9ca3af", fontSize: 11, fontFamily: "Saira" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#9ca3af", fontSize: 11, fontFamily: "Saira" }} axisLine={false} tickLine={false} width={50} tickFormatter={(v) => Number(v) >= 1000 ? `${(Number(v) / 1000).toFixed(0)}k` : String(v)} />
+                  <Tooltip
+                    contentStyle={{ background: "#1f2937", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "12px", fontFamily: "Saira" }}
+                    labelStyle={{ color: "#9ca3af" }}
+                    itemStyle={{ color: "#10b981" }}
+                    formatter={(value) => [formatLkr(Number(value ?? 0)), "Revenue"]}
+                  />
+                  <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2.5} fill="url(#revGrad)" />
+                </RechartsArea>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Order Status + Payment Method Breakdown */}
+        <div className="rounded-2xl border border-white/10 bg-gray-800/50 p-6 backdrop-blur-sm">
+          <h2 className="text-base font-semibold text-white font-saira mb-5">Order Breakdown</h2>
+
+          {/* Status rings */}
+          <div className="mb-6">
+            <p className="text-xs text-gray-400 font-saira mb-3 uppercase tracking-wider">By Status</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Pending", value: statusBreakdown.pending, color: "text-amber-400", bg: "bg-amber-500/10" },
+                { label: "Processing", value: statusBreakdown.processing, color: "text-blue-400", bg: "bg-blue-500/10" },
+                { label: "Shipped", value: statusBreakdown.shipped, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+                { label: "Cancelled", value: statusBreakdown.cancelled, color: "text-red-400", bg: "bg-red-500/10" },
+              ].map((s) => (
+                <div key={s.label} className={`rounded-xl ${s.bg} p-3 text-center`}>
+                  <p className={`text-lg font-bold ${s.color} font-saira`}>{s.value}</p>
+                  <p className="text-[10px] text-gray-400 font-saira">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Payment method bars */}
+          <div>
+            <p className="text-xs text-gray-400 font-saira mb-3 uppercase tracking-wider">By Payment</p>
+            <div className="space-y-3">
+              {ordersByMethod.map((m) => {
+                const total = ordersByMethod.reduce((s, x) => s + x.value, 0);
+                const pct = total > 0 ? (m.value / total) * 100 : 0;
+                return (
+                  <div key={m.name}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: m.color }} />
+                        <span className="text-xs text-gray-300 font-saira">{m.name}</span>
+                      </div>
+                      <span className="text-xs font-semibold text-white font-saira">{m.value}</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-white/5">
+                      <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: m.color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Orders Per Day Bar Chart */}
+      <div className="mt-6 rounded-2xl border border-white/10 bg-gray-800/50 p-6 backdrop-blur-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-base font-semibold text-white font-saira">Orders ({ordRangeLabel})</h2>
+            <p className="text-xs text-gray-400 font-saira mt-0.5">{ordersRange === "year" ? "Monthly" : "Daily"} order volume</p>
+          </div>
+          <div className="flex items-center gap-1 rounded-xl bg-white/5 p-1 border border-white/10">
+            {([["7d", "Week"], ["30d", "Month"], ["year", "Year"]] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setOrdersRange(key)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all font-saira ${
+                  ordersRange === key
+                    ? "bg-amber-500/20 text-amber-400"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="overflow-x-auto -mx-2 px-2">
+          <div className="h-[200px]" style={{ minWidth: ordersRange === "30d" ? 800 : 500 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsBar data={ordersChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="name" tick={{ fill: "#9ca3af", fontSize: 11, fontFamily: "Saira" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#9ca3af", fontSize: 11, fontFamily: "Saira" }} axisLine={false} tickLine={false} width={30} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ background: "#1f2937", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "12px", fontFamily: "Saira" }}
+                  labelStyle={{ color: "#9ca3af" }}
+                  itemStyle={{ color: "#f59e0b" }}
+                  formatter={(value) => [String(value ?? 0), "Orders"]}
+                />
+                <Bar dataKey="orders" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+              </RechartsBar>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       {/* Recent Activity Section */}
