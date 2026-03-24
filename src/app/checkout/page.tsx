@@ -782,18 +782,18 @@ export default function CheckoutPage() {
                         </div>
                         <div className="bg-white p-4">
                           <p className="mb-3 text-xs font-medium text-gray-500 font-saira uppercase tracking-wider">Choose a plan on Payzy</p>
-                          <div className="grid grid-cols-3 gap-2.5">
+                          <div className="grid grid-cols-3 gap-2">
                             {[2, 3, 4].map((months) => (
                               <div
                                 key={months}
-                                className="rounded-lg border border-sky-100 bg-sky-50/60 p-3 text-center transition-colors hover:border-sky-300 hover:bg-sky-50"
+                                className="rounded-lg border border-sky-100 bg-sky-50/60 px-2 py-2.5 text-center transition-colors hover:border-sky-300 hover:bg-sky-50"
                               >
-                                <p className="text-[11px] font-medium text-sky-500 font-saira uppercase tracking-wider">
+                                <p className="text-[10px] font-medium text-sky-500 font-saira uppercase tracking-wider">
                                   {months} Months
                                 </p>
-                                <p className="mt-1 font-saira">
-                                  <span className="text-lg font-bold text-sky-700">{formatLkr(Math.ceil(grandTotal / months))}</span>
-                                  <span className="text-[10px] text-gray-400">/mo</span>
+                                <p className="mt-1 font-saira leading-tight">
+                                  <span className="text-sm sm:text-lg font-bold text-sky-700">{formatLkr(Math.ceil(grandTotal / months))}</span>
+                                  <span className="text-[9px] sm:text-[10px] text-gray-400">/mo</span>
                                 </p>
                               </div>
                             ))}
