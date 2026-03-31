@@ -219,6 +219,8 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
                   showQuickAdd={true}
                   href={path}
                   label={label}
+                  priority={index < 6}
+                  sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, 50vw"
                 />
               </div>
             );

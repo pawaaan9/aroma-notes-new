@@ -6,6 +6,9 @@ import VariantSelector from "./VariantSelector";
 import MainAccordsChart from "./MainAccordsChart";
 import { useCart } from "@/contexts/CartContext";
 
+const BLUR_DATA_URL =
+  "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Crect fill='%23e5e7eb' width='4' height='5'/%3E%3C/svg%3E";
+
 type Props = {
   product: SanityProduct;
 };
@@ -31,6 +34,9 @@ export default function ProductDetail({ product }: Props) {
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
           className="object-contain"
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
+          priority
         />
       </div>
       <div className="font-saira">
@@ -84,8 +90,9 @@ export default function ProductDetail({ product }: Props) {
                 // pick selected variant metadata for cart
                 const v = selectedIdx >= 0 ? variants[selectedIdx] ?? null : null;
                 const price = v ? (v.discountPrice ?? v.price ?? null) : null;
+                const originalPrice = v ? (v.price ?? null) : null;
                 const itemId = v?.size ? `${product._id}:${v.size}` : product._id;
-                addItem({ id: itemId, name: product.name, imageUrl: imageSrc, brand: product.brand ?? null, size: v?.size ?? null, price }, 1);
+                addItem({ id: itemId, name: product.name, imageUrl: imageSrc, brand: product.brand ?? null, size: v?.size ?? null, price, originalPrice }, 1);
               } catch {}
               // fly-to-cart animation
               const srcEl = document.getElementById("product-image");

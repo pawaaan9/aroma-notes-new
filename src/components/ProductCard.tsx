@@ -2,6 +2,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+const BLUR_DATA_URL =
+  "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Crect fill='%23e5e7eb' width='4' height='5'/%3E%3C/svg%3E";
+
 interface ProductCardProps {
   name: string;
   description?: string;
@@ -13,6 +16,8 @@ interface ProductCardProps {
   showQuickAdd?: boolean;
   href?: string;
   label?: string;
+  priority?: boolean;
+  sizes?: string;
 }
 
 export default function ProductCard({ 
@@ -25,13 +30,15 @@ export default function ProductCard({
   delay = "delay-100",
   showQuickAdd = false,
   href,
-  label
+  label,
+  priority = false,
+  sizes,
 }: ProductCardProps) {
   if (showQuickAdd) {
-    // Products page layout with Quick Add button
+    const resolvedSizes = sizes ?? "(min-width: 1024px) 33vw, 50vw";
     const CardInner = (
       <div className={`group relative animate-fade-in-up ${delay}`}>
-        <div className="aspect-[4/5] w-full max-h-[380px] overflow-hidden rounded-lg bg-gray-200 shadow-xl transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-primary/10 relative">
+        <div className="relative aspect-[4/5] w-full max-h-[380px] overflow-hidden rounded-lg bg-gray-200 shadow-xl transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-primary/10">
           {label ? (
             <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-1.5 py-0.5 rounded bg-gray-900/90 text-white text-[7px] tracking-normal uppercase shadow whitespace-nowrap">
               {label}
@@ -41,10 +48,12 @@ export default function ProductCard({
             alt={imageAlt}
             className="h-full w-full object-cover object-center transition-transform duration-300"
             src={imageSrc}
-            width={400}
-            height={533}
+            fill
+            sizes={resolvedSizes}
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+            priority={priority}
           />
-          {/* Removed floating view pill on hover over image */}
         </div>
         <div className="mt-3 flex flex-col">
           <h3 className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-primary transition-colors duration-300 font-saira line-clamp-1 sm:line-clamp-2">
@@ -69,26 +78,27 @@ export default function ProductCard({
     return CardInner;
   }
 
-  // Home page layout — light premium card
+  const resolvedSizes = sizes ?? "(min-width: 1024px) 25vw, 50vw";
   const CardInner = (
     <div className={`group relative animate-fade-in-up ${delay}`}>
       <div className="relative rounded-2xl bg-white border border-gray-100 overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-gray-200/60 hover:-translate-y-1.5 hover:border-gray-200">
         {/* Image */}
-        <div className="aspect-[4/5] w-full max-h-[360px] overflow-hidden bg-gray-50">
-          <div className="relative h-full">
-            {label ? (
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-full bg-gray-900/80 backdrop-blur-md text-white text-[9px] font-semibold tracking-wider uppercase shadow-lg whitespace-nowrap">
-                {label}
-              </div>
-            ) : null}
-            <Image
-              alt={imageAlt}
-              className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-              src={imageSrc}
-              width={300}
-              height={375}
-            />
-          </div>
+        <div className="relative aspect-[4/5] w-full max-h-[360px] overflow-hidden bg-gray-50">
+          {label ? (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-full bg-gray-900/80 backdrop-blur-md text-white text-[9px] font-semibold tracking-wider uppercase shadow-lg whitespace-nowrap">
+              {label}
+            </div>
+          ) : null}
+          <Image
+            alt={imageAlt}
+            className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+            src={imageSrc}
+            fill
+            sizes={resolvedSizes}
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+            priority={priority}
+          />
         </div>
 
         {/* Details */}

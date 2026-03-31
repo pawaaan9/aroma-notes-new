@@ -82,7 +82,7 @@ function normalizeSavedCheckoutForm(raw: unknown): FormData {
 }
 
 export default function CheckoutPage() {
-  const { items, total, clear } = useCart();
+  const { items, total, originalTotal, clear } = useCart();
   const [deliveryFeeConfig, setDeliveryFeeConfig] = useState<number | null>(null);
 
   // Fetch delivery fee from Firestore
@@ -112,8 +112,9 @@ export default function CheckoutPage() {
   } | null>(null);
 
   const DELIVERY_FEE = deliveryFeeConfig ?? 350; // fallback while loading
-  const deliveryFee = total > 0 ? DELIVERY_FEE : 0;
-  const grandTotal = total + deliveryFee;
+  const effectiveSubtotal = paymentMethod === "payzy" ? originalTotal : total;
+  const deliveryFee = effectiveSubtotal > 0 ? DELIVERY_FEE : 0;
+  const grandTotal = effectiveSubtotal + deliveryFee;
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -217,7 +218,9 @@ export default function CheckoutPage() {
         imageUrl: it.imageUrl,
         brand: it.brand,
         size: it.size,
-        price: it.price ?? 0,
+        price: paymentMethod === "payzy"
+          ? (it.originalPrice ?? it.price ?? 0)
+          : (it.price ?? 0),
         quantity: it.quantity,
       }));
 
@@ -235,7 +238,7 @@ export default function CheckoutPage() {
 
       const order = await createOrder({
         items: orderItems,
-        subtotal: total,
+        subtotal: effectiveSubtotal,
         deliveryFee,
         total: grandTotal,
         paymentMethod,
@@ -302,7 +305,7 @@ export default function CheckoutPage() {
             quantity: it.quantity,
             price: it.price,
           })),
-          subtotal: total,
+          subtotal: effectiveSubtotal,
           deliveryFee,
           total: grandTotal,
           paymentMethod,
@@ -974,7 +977,11 @@ export default function CheckoutPage() {
                         </div>
                         <span className="text-sm font-semibold text-gray-900 font-saira">
                           {typeof item.price === "number"
-                            ? formatLkr(item.price * item.quantity)
+                            ? formatLkr(
+                                (paymentMethod === "payzy"
+                                  ? (item.originalPrice ?? item.price)
+                                  : item.price) * item.quantity
+                              )
                             : "—"}
                         </span>
                       </div>
@@ -985,7 +992,7 @@ export default function CheckoutPage() {
                   <div className="mt-5 space-y-3 border-t border-gray-200 pt-4">
                     <div className="flex justify-between text-sm font-saira">
                       <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium text-gray-900">{formatLkr(total)}</span>
+                      <span className="font-medium text-gray-900">{formatLkr(effectiveSubtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm font-saira">
                       <span className="text-gray-600">Delivery</span>

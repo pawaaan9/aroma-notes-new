@@ -8,6 +8,7 @@ export type CartItem = {
   brand?: string | null;
   size?: string | null;
   price?: number | null;
+  originalPrice?: number | null;
   quantity: number;
 };
 
@@ -15,6 +16,7 @@ type CartContextValue = {
   items: CartItem[];
   count: number;
   total: number;
+  originalTotal: number;
   addItem: (item: Omit<CartItem, "quantity">, qty?: number) => void;
   updateQuantity: (id: string, qty: number) => void;
   removeItem: (id: string) => void;
@@ -88,6 +90,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     items,
     count: items.reduce((n, it) => n + it.quantity, 0),
     total: items.reduce((sum, it) => sum + (it.price ?? 0) * it.quantity, 0),
+    originalTotal: items.reduce((sum, it) => sum + (it.originalPrice ?? it.price ?? 0) * it.quantity, 0),
     addItem,
     updateQuantity,
     removeItem,

@@ -56,6 +56,8 @@ export default function FeaturedProducts() {
               delay={`delay-${(index + 1) * 100}`}
               href={path}
               label={label}
+              priority={index < 4}
+              sizes="(min-width: 1024px) 25vw, 50vw"
             />
           </div>
         );
