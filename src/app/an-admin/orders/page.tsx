@@ -315,6 +315,22 @@ function OrderDetailModal({
                   {order.customer.city}
                 </p>
               </div>
+              {order.customer.state && (
+                <div>
+                  <p className="text-xs text-gray-500 font-saira">Province</p>
+                  <p className="text-sm font-medium text-white font-saira">
+                    {order.customer.state}
+                  </p>
+                </div>
+              )}
+              {order.customer.zip && (
+                <div>
+                  <p className="text-xs text-gray-500 font-saira">Postal Code</p>
+                  <p className="text-sm font-medium text-white font-saira">
+                    {order.customer.zip}
+                  </p>
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <p className="text-xs text-gray-500 font-saira">Address</p>
                 <p className="text-sm font-medium text-white font-saira">
