@@ -8,11 +8,18 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-type OrderEmailData = {
+export type OrderEmailData = {
   orderNumber: string;
   customerName: string;
   customerEmail: string;
-  items: { name: string; brand?: string | null; size?: string | null; quantity: number; price: number }[];
+  items: {
+    name: string;
+    brand?: string | null;
+    size?: string | null;
+    quantity: number;
+    price: number;
+    productId?: string;
+  }[];
   subtotal: number;
   deliveryFee: number;
   total: number;
@@ -20,6 +27,11 @@ type OrderEmailData = {
   address: string;
   city: string;
   phone: string;
+  state?: string;
+  zip?: string;
+  notes?: string;
+  orderId?: string;
+  bankSlipUrl?: string;
 };
 
 const F = "'Segoe UI',Arial,sans-serif";
@@ -53,6 +65,24 @@ function itemRows(items: OrderEmailData["items"]): string {
     .join("");
 }
 
+function adminItemRows(items: OrderEmailData["items"]): string {
+  return items
+    .map(
+      (it) => `
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #eef1f6;font-family:${F};font-size:12px;color:#4b5563;word-break:break-all">${it.productId || "—"}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eef1f6;font-family:${F}">
+          <div style="font-size:13px;font-weight:600;color:#111827">${it.name}</div>
+          <div style="margin-top:2px;font-size:11px;color:#6b7280">${it.brand || "—"} &middot; ${it.size || "—"}</div>
+        </td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eef1f6;font-family:${F};font-size:13px;color:#374151;text-align:center">${it.quantity}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eef1f6;font-family:${F};font-size:13px;color:#374151;text-align:right">${formatLkr(it.price)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eef1f6;font-family:${F};font-size:13px;font-weight:600;color:#111827;text-align:right">${formatLkr(it.price * it.quantity)}</td>
+      </tr>`,
+    )
+    .join("");
+}
+
 function sectionTitle(text: string): string {
   return `<h3 style="margin:0 0 10px;font-family:${F};font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1.5px">${text}</h3>`;
 }
@@ -79,13 +109,29 @@ function totalsBlock(data: OrderEmailData): string {
 }
 
 function deliveryBlock(data: OrderEmailData): string {
+  const region = [data.city, data.state, data.zip].filter(Boolean).join(", ");
   return `
     ${sectionTitle("Delivery Address")}
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;margin-bottom:24px">
       <tr><td style="padding:12px 16px;font-family:${F}">
         <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:4px">${data.customerName}</div>
-        <div style="font-size:13px;color:#4b5563;line-height:1.6">${data.address}<br/>${data.city}</div>
+        <div style="font-size:13px;color:#4b5563;line-height:1.6">${data.address}<br/>${region || data.city}</div>
         <div style="font-size:13px;color:#4b5563;margin-top:4px">${data.phone}</div>
+      </td></tr>
+    </table>`;
+}
+
+function adminCustomerBlock(data: OrderEmailData): string {
+  const region = [data.city, data.state, data.zip].filter(Boolean).join(", ");
+  return `
+    ${sectionTitle("Customer")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;margin-bottom:20px">
+      <tr><td style="padding:14px 16px;font-family:${F};font-size:13px;color:#1f2937;line-height:1.65">
+        <div><strong>Name:</strong> ${data.customerName}</div>
+        <div><strong>Email:</strong> <a href="mailto:${data.customerEmail}" style="color:#b45309">${data.customerEmail}</a></div>
+        <div><strong>Phone:</strong> ${data.phone}</div>
+        <div style="margin-top:8px"><strong>Address:</strong><br/>${data.address}</div>
+        <div><strong>City / Province / Postal:</strong> ${region || "—"}</div>
       </td></tr>
     </table>`;
 }
@@ -190,6 +236,114 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  New order — admin notification                                     */
+/* ------------------------------------------------------------------ */
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export function buildNewOrderAdminHtml(data: OrderEmailData, receivedAtLabel: string): string {
+  const bankBlock =
+    data.bankSlipUrl && data.paymentMethod === "bank_deposit"
+      ? `
+    ${sectionTitle("Bank deposit slip")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;margin-bottom:20px">
+      <tr><td style="padding:14px 16px;font-family:${F}">
+        <a href="${escapeHtml(data.bankSlipUrl!)}" style="color:#1d4ed8;font-size:14px;font-weight:600;word-break:break-all">Open uploaded slip</a>
+      </td></tr>
+    </table>`
+      : "";
+
+  const notesBlock = data.notes?.trim()
+    ? `
+    ${sectionTitle("Order notes (customer)")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;margin-bottom:20px">
+      <tr><td style="padding:12px 16px;font-family:${F};font-size:13px;color:#374151;white-space:pre-wrap">${escapeHtml(data.notes.trim())}</td></tr>
+    </table>`
+    : "";
+
+  const metaRows = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f172a;border-radius:8px;margin-bottom:20px">
+      <tr>
+        <td style="padding:14px 18px">
+          <div style="font-family:${F};font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px">Order number</div>
+          <div style="font-family:${F};font-size:17px;font-weight:700;color:#ffffff;margin-top:2px">${escapeHtml(data.orderNumber)}</div>
+          ${data.orderId ? `<div style="font-family:${F};font-size:11px;color:#94a3b8;margin-top:6px;word-break:break-all">ID: ${escapeHtml(data.orderId)}</div>` : ""}
+        </td>
+        <td style="padding:14px 18px;text-align:right;vertical-align:top">
+          <div style="font-family:${F};font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px">Total</div>
+          <div style="font-family:${F};font-size:17px;font-weight:700;color:#ffffff;margin-top:2px">${formatLkr(data.total)}</div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:0 18px 14px;font-family:${F};font-size:11px;color:#94a3b8">${escapeHtml(receivedAtLabel)}</td>
+      </tr>
+    </table>`;
+
+  const body = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px">
+      <tr><td style="text-align:center;padding:4px 0 0">
+        <h2 style="margin:0;font-family:${F};font-size:20px;font-weight:700;color:#111827">New customer order</h2>
+      </td></tr>
+      <tr><td style="text-align:center;padding:8px 0 0">
+        <p style="margin:0;font-family:${F};font-size:13px;color:#6b7280">A customer has just placed an order. Review the details below and fulfill it from your admin panel.</p>
+      </td></tr>
+    </table>
+
+    ${metaRows}
+    ${adminCustomerBlock(data)}
+    ${paymentBlock(data)}
+    ${bankBlock}
+    ${notesBlock}
+
+    ${sectionTitle("Line items")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:16px">
+      <tr style="background-color:#f9fafb">
+        <th style="padding:8px 10px;font-family:${F};font-size:10px;color:#6b7280;text-align:left;text-transform:uppercase">Product ID</th>
+        <th style="padding:8px 10px;font-family:${F};font-size:10px;color:#6b7280;text-align:left;text-transform:uppercase">Product</th>
+        <th style="padding:8px 10px;font-family:${F};font-size:10px;color:#6b7280;text-align:center;text-transform:uppercase">Qty</th>
+        <th style="padding:8px 10px;font-family:${F};font-size:10px;color:#6b7280;text-align:right;text-transform:uppercase">Unit</th>
+        <th style="padding:8px 10px;font-family:${F};font-size:10px;color:#6b7280;text-align:right;text-transform:uppercase">Line</th>
+      </tr>
+      ${adminItemRows(data.items)}
+    </table>
+
+    ${totalsBlock(data)}`;
+
+  return baseLayout(`New order ${data.orderNumber} · Aroma Notes`, "#d97706", body);
+}
+
+const DEFAULT_ADMIN_ORDER_EMAIL = "nimsaraheshan08@gmail.com";
+
+export async function sendNewOrderAdminEmail(data: OrderEmailData): Promise<void> {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    return;
+  }
+  const to = (process.env.ADMIN_ORDER_EMAIL ?? DEFAULT_ADMIN_ORDER_EMAIL).trim();
+  if (!to) return;
+
+  const receivedAt = new Date().toLocaleString("en-LK", {
+    timeZone: "Asia/Colombo",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const receivedAtLabel = `Notification sent: ${receivedAt} (Asia/Colombo)`;
+
+  await transporter.sendMail({
+    from: `"Aroma Notes Orders" <${process.env.GMAIL_USER}>`,
+    to,
+    replyTo: data.customerEmail,
+    subject: `New order: ${data.orderNumber} · ${data.customerName} | Aroma Notes`,
+    html: buildNewOrderAdminHtml(data, receivedAtLabel),
+  });
+}
+
+/* ------------------------------------------------------------------ */
 /*  Shipped / Handed to Courier                                        */
 /* ------------------------------------------------------------------ */
 
@@ -272,6 +426,11 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<
     subject: `Order Confirmed - ${data.orderNumber} | Aroma Notes`,
     html: buildOrderConfirmationHtml(data),
   });
+  try {
+    await sendNewOrderAdminEmail(data);
+  } catch (err) {
+    console.error("[Email] Admin new-order notification failed:", err);
+  }
 }
 
 export async function sendShippedEmail(

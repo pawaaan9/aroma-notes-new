@@ -50,6 +50,8 @@ export type Order = {
     phone: string;
     address: string;
     city: string;
+    state?: string;
+    zip?: string;
     notes?: string;
   };
   createdAt: Date;
@@ -112,7 +114,13 @@ function mapDocToOrder(id: string, data: Record<string, any>): Order {
       phone: data.customer?.phone ?? "",
       address: data.customer?.address ?? "",
       city: data.customer?.city ?? "",
-      notes: data.customer?.notes ?? "",
+      ...(typeof data.customer?.state === "string" && data.customer.state.trim()
+        ? { state: data.customer.state.trim() }
+        : {}),
+      ...(typeof data.customer?.zip === "string" && data.customer.zip.trim()
+        ? { zip: data.customer.zip.trim() }
+        : {}),
+      ...(data.customer?.notes ? { notes: String(data.customer.notes) } : {}),
     },
     createdAt: toDate(data.createdAt),
     updatedAt: toDate(data.updatedAt),

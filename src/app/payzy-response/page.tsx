@@ -111,7 +111,9 @@ function PayzyResponseContent() {
 
         // Fire-and-forget order confirmation email
         if (orderData?.customer?.email) {
+          const cust = orderData.customer as Record<string, unknown>;
           const items = (orderData.items ?? []).map((it: Record<string, unknown>) => ({
+            productId: (it.productId as string) ?? "",
             name: it.name ?? "",
             brand: (it.brand as string | undefined) ?? null,
             size: (it.size as string | undefined) ?? null,
@@ -122,6 +124,7 @@ function PayzyResponseContent() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              orderId,
               orderNumber: orderNum,
               customerName: orderData.customer.name ?? "Customer",
               customerEmail: orderData.customer.email,
@@ -132,7 +135,11 @@ function PayzyResponseContent() {
               paymentMethod: "payzy",
               address: orderData.customer.address ?? "",
               city: orderData.customer.city ?? "",
+              state: typeof cust.state === "string" ? cust.state : "",
+              zip: typeof cust.zip === "string" ? cust.zip : "",
               phone: orderData.customer.phone ?? "",
+              notes: typeof cust.notes === "string" ? cust.notes : undefined,
+              bankSlipUrl: typeof orderData.bankSlipUrl === "string" ? orderData.bankSlipUrl : undefined,
             }),
           }).catch(() => {});
         }

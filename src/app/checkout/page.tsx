@@ -233,6 +233,8 @@ export default function CheckoutPage() {
         phone: form.phone.trim(),
         address: form.address.trim(),
         city: form.city.trim(),
+        state: form.state.trim(),
+        zip: form.zip.trim(),
         ...(customerNotes ? { notes: customerNotes } : {}),
       };
 
@@ -295,10 +297,12 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          orderId: order.id,
           orderNumber: order.orderNumber,
           customerName: customer.name,
           customerEmail: customer.email,
           items: orderItems.map((it) => ({
+            productId: it.productId,
             name: it.name,
             brand: it.brand ?? null,
             size: it.size ?? null,
@@ -311,7 +315,11 @@ export default function CheckoutPage() {
           paymentMethod,
           address: customer.address,
           city: customer.city,
+          state: customer.state,
+          zip: customer.zip,
           phone: customer.phone,
+          notes: customerNotes || undefined,
+          bankSlipUrl: bankSlipUrl ?? undefined,
         }),
       }).catch(() => {});
     } catch (err) {
