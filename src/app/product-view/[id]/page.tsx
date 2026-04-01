@@ -73,7 +73,6 @@ export default function ProductViewPage() {
                             imageSrc={imageSrc}
                             imageAlt={p.name}
                             delay={`delay-${(index + 1) * 100}`}
-                            showQuickAdd
                             href={path}
                             label={label}
                             sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, 50vw"

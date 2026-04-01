@@ -216,7 +216,6 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
                   imageSrc={imageSrc}
                   imageAlt={product.name}
                   delay={`delay-${(index + 1) * 100}`}
-                  showQuickAdd={true}
                   href={path}
                   label={label}
                   priority={index < 6}
