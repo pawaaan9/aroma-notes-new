@@ -81,7 +81,6 @@ export default function ProductCard({
           {payzyX4 && (
             <div className="flex items-center gap-1.5">
               <Image src={payzyLogo} alt="Payzy" width={24} height={24} className="rounded-md shrink-0" />
-              <span className="text-[10px] sm:text-[11px] text-gray-500 font-saira whitespace-nowrap">or</span>
               <span className="text-[10px] sm:text-[11px] font-bold text-gray-800 font-saira whitespace-nowrap">
                 {payzyX4}
               </span>

@@ -75,7 +75,6 @@ export default function VariantSelector({ variants, value, onChange }: VariantSe
       {selected?.price != null && (
         <div className="mt-2.5 flex items-center gap-2">
           <Image src={payzyLogo} alt="Payzy" width={32} height={32} className="rounded-md shrink-0" />
-          <span className="text-sm text-gray-500 font-saira">or</span>
           <span className="text-sm font-bold text-gray-800 font-saira">{formatLkr(selected.price / 4)}</span>
           <span className="text-sm text-gray-500 font-saira">x 4 interest free payments</span>
         </div>
