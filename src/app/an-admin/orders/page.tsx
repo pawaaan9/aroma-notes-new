@@ -209,35 +209,40 @@ function OrderDetailModal({
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Status + Payment + actions */}
+          {/* Status + Payment badges */}
           <div className="flex flex-wrap items-center gap-3">
             <StatusBadge status={order.status} />
             <PaymentBadge method={order.paymentMethod} />
-            <div className="ml-auto flex flex-wrap gap-2">
-              {order.status !== "sent_to_courier" && order.status !== "cancelled" && (
-                <button
-                  disabled={updating}
-                  onClick={() => handleStatus("sent_to_courier")}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-900/40 transition-all hover:-translate-y-0.5 hover:bg-emerald-400 hover:shadow-emerald-800/50 disabled:translate-y-0 disabled:opacity-50 font-saira"
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Send to Courier
-                </button>
-              )}
-              {order.status !== "cancelled" && order.status !== "sent_to_courier" && canCancelOrder && (
+          </div>
+
+          {/* Action buttons */}
+          {order.status !== "sent_to_courier" && order.status !== "cancelled" && (
+            <div className="flex items-center gap-3">
+              <button
+                disabled={updating}
+                onClick={() => handleStatus("sent_to_courier")}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/40 transition-all hover:-translate-y-0.5 hover:bg-emerald-400 hover:shadow-emerald-800/50 disabled:translate-y-0 disabled:opacity-50 font-saira"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Send to Courier
+              </button>
+              {canCancelOrder && (
                 <button
                   disabled={updating}
                   onClick={() => handleStatus("cancelled")}
-                  className="rounded-lg bg-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/30 disabled:opacity-50 font-saira"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-400 transition-all hover:bg-red-500/20 hover:border-red-500/50 disabled:opacity-50 font-saira"
                 >
-                  Cancel Order
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Cancel
                 </button>
               )}
             </div>
-          </div>
-          {!canCancelOrder && (
+          )}
+          {!canCancelOrder && order.status !== "sent_to_courier" && order.status !== "cancelled" && (
             <p className="text-xs text-purple-300 font-saira">
               This order is already paid via Payzy and cannot be cancelled.
             </p>

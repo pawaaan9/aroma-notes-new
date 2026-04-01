@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { formatLkr } from "@/utils/currency";
 import { createOrder, type OrderItem, type PaymentMethod } from "@/lib/orders";
-import { fetchSettings } from "@/lib/settings";
+import { subscribeToSettings } from "@/lib/settings";
 import { upsertCustomerFromOrder } from "@/lib/customers";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
@@ -85,9 +85,10 @@ export default function CheckoutPage() {
   const { items, total, originalTotal, clear } = useCart();
   const [deliveryFeeConfig, setDeliveryFeeConfig] = useState<number | null>(null);
 
-  // Fetch delivery fee from Firestore
+  // Subscribe to delivery fee so it stays in sync with admin changes
   useEffect(() => {
-    fetchSettings().then((s) => setDeliveryFeeConfig(s.deliveryFee));
+    const unsub = subscribeToSettings((s) => setDeliveryFeeConfig(s.deliveryFee));
+    return () => unsub();
   }, []);
   const [form, setForm] = useState<FormData>(() => {
     if (typeof window !== "undefined") {
@@ -111,7 +112,8 @@ export default function CheckoutPage() {
     paymentMethod: PaymentMethod;
   } | null>(null);
 
-  const DELIVERY_FEE = deliveryFeeConfig ?? 350; // fallback while loading
+  const settingsLoaded = deliveryFeeConfig !== null;
+  const DELIVERY_FEE = deliveryFeeConfig ?? 0;
   const effectiveSubtotal = paymentMethod === "payzy" ? originalTotal : total;
   const deliveryFee = effectiveSubtotal > 0 ? DELIVERY_FEE : 0;
   const grandTotal = effectiveSubtotal + deliveryFee;
@@ -1019,7 +1021,7 @@ export default function CheckoutPage() {
                   {/* Place order button */}
                   <button
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || !settingsLoaded}
                     className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-saira font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {submitting ? (

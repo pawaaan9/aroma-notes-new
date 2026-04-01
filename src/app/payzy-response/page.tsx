@@ -78,7 +78,7 @@ function PayzyResponseContent() {
         const orderData = orderSnap.exists() ? orderSnap.data() : null;
 
         await updateDoc(doc(db, "orders", orderId), {
-          status: "processing",
+          status: "confirmed",
           payzyPaymentStatus: "success",
           payzySignatureValid: signatureValid,
           payzyData,

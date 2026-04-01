@@ -7,18 +7,18 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { formatLkr } from "@/utils/currency";
-import { fetchSettings } from "@/lib/settings";
+import { subscribeToSettings } from "@/lib/settings";
 
 export default function CartPage() {
   const { items, count, total, updateQuantity, removeItem, clear } = useCart();
   const [deliveryFeeConfig, setDeliveryFeeConfig] = useState<number | null>(null);
 
-  // Fetch delivery fee from Firestore
   useEffect(() => {
-    fetchSettings().then((s) => setDeliveryFeeConfig(s.deliveryFee));
+    const unsub = subscribeToSettings((s) => setDeliveryFeeConfig(s.deliveryFee));
+    return () => unsub();
   }, []);
 
-  const DELIVERY_FEE = deliveryFeeConfig ?? 350; // fallback while loading
+  const DELIVERY_FEE = deliveryFeeConfig ?? 0;
   const deliveryFee = total > 0 ? DELIVERY_FEE : 0;
   const grandTotal = total + deliveryFee;
 
