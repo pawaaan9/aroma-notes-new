@@ -19,16 +19,22 @@ const STATUS_CONFIG: Record<
   { label: string; bg: string; text: string; dot: string }
 > = {
   pending: {
-    label: "Pending",
-    bg: "bg-amber-500/10",
-    text: "text-amber-500",
-    dot: "bg-amber-500",
+    label: "Confirmed",
+    bg: "bg-blue-500/10",
+    text: "text-blue-400",
+    dot: "bg-blue-400",
   },
   processing: {
-    label: "Processing",
+    label: "Confirmed",
     bg: "bg-blue-500/10",
-    text: "text-blue-500",
-    dot: "bg-blue-500",
+    text: "text-blue-400",
+    dot: "bg-blue-400",
+  },
+  confirmed: {
+    label: "Confirmed",
+    bg: "bg-blue-500/10",
+    text: "text-blue-400",
+    dot: "bg-blue-400",
   },
   sent_to_courier: {
     label: "Sent to Courier",
@@ -208,16 +214,7 @@ function OrderDetailModal({
             <StatusBadge status={order.status} />
             <PaymentBadge method={order.paymentMethod} />
             <div className="ml-auto flex flex-wrap gap-2">
-              {order.status !== "processing" && order.status !== "sent_to_courier" && (
-                <button
-                  disabled={updating}
-                  onClick={() => handleStatus("processing")}
-                  className="rounded-lg bg-blue-500/20 px-3 py-1.5 text-xs font-semibold text-blue-400 transition-colors hover:bg-blue-500/30 disabled:opacity-50 font-saira"
-                >
-                  Mark Processing
-                </button>
-              )}
-              {order.status !== "sent_to_courier" && (
+              {order.status !== "sent_to_courier" && order.status !== "cancelled" && (
                 <button
                   disabled={updating}
                   onClick={() => handleStatus("sent_to_courier")}
@@ -226,7 +223,7 @@ function OrderDetailModal({
                   <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  Handed to Courier
+                  Send to Courier
                 </button>
               )}
               {order.status !== "cancelled" && order.status !== "sent_to_courier" && canCancelOrder && (
@@ -492,10 +489,14 @@ export default function OrdersPage() {
 
   // Counts per status
   const counts = useMemo(() => {
-    const c = { all: 0, pending: 0, processing: 0, sent_to_courier: 0, cancelled: 0 };
+    const c = { all: 0, confirmed: 0, sent_to_courier: 0, cancelled: 0 };
     for (const o of orders) {
       c.all++;
-      c[o.status]++;
+      if (o.status === "pending" || o.status === "processing" || o.status === "confirmed") {
+        c.confirmed++;
+      } else {
+        c[o.status]++;
+      }
     }
     return c;
   }, [orders]);
@@ -510,7 +511,11 @@ export default function OrdersPage() {
   const filtered = useMemo(() => {
     let list = orders;
     if (activeTab !== "all") {
-      list = list.filter((o) => o.status === activeTab);
+      if (activeTab === "confirmed") {
+        list = list.filter((o) => o.status === "confirmed" || o.status === "pending" || o.status === "processing");
+      } else {
+        list = list.filter((o) => o.status === activeTab);
+      }
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -527,8 +532,7 @@ export default function OrdersPage() {
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: "all", label: "All", count: counts.all },
-    { key: "pending", label: "Pending", count: counts.pending },
-    { key: "processing", label: "Processing", count: counts.processing },
+    { key: "confirmed", label: "Confirmed", count: counts.confirmed },
     { key: "sent_to_courier", label: "Sent to Courier", count: counts.sent_to_courier },
     { key: "cancelled", label: "Cancelled", count: counts.cancelled },
   ];
@@ -602,8 +606,8 @@ export default function OrdersPage() {
           <p className="mt-1 text-xl font-bold text-white font-saira">{counts.all}</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-gray-800/50 p-4">
-          <p className="text-xs text-gray-400 font-saira">Pending</p>
-          <p className="mt-1 text-xl font-bold text-amber-400 font-saira">{counts.pending}</p>
+          <p className="text-xs text-gray-400 font-saira">Confirmed</p>
+          <p className="mt-1 text-xl font-bold text-blue-400 font-saira">{counts.confirmed}</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-gray-800/50 p-4">
           <p className="text-xs text-gray-400 font-saira">Sent to Courier</p>

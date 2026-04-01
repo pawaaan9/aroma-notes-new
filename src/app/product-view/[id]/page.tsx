@@ -64,12 +64,14 @@ export default function ProductViewPage() {
                       const discountPrice = target?.discountPrice ?? null;
                       const displayPrice = discountPrice != null ? formatLkr(discountPrice) : originalPrice != null ? formatLkr(originalPrice) : "";
                       const displayOriginalPrice = discountPrice != null && originalPrice != null ? formatLkr(originalPrice) : undefined;
+                      const payzyX4 = originalPrice != null ? formatLkr(originalPrice / 4) : undefined;
                       return (
                         <div key={p._id}>
                           <ProductCard
                             name={p.name}
                             price={displayPrice}
                             originalPrice={displayOriginalPrice}
+                            payzyX4={payzyX4}
                             imageSrc={imageSrc}
                             imageAlt={p.name}
                             delay={`delay-${(index + 1) * 100}`}

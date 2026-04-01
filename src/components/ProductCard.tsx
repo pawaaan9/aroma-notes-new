@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import payzyLogo from "@/assets/payzy logo.jpg";
 
 const BLUR_DATA_URL =
   "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Crect fill='%23e5e7eb' width='4' height='5'/%3E%3C/svg%3E";
@@ -10,6 +11,7 @@ interface ProductCardProps {
   description?: string;
   price: string;
   originalPrice?: string;
+  payzyX4?: string;
   imageSrc: string;
   imageAlt: string;
   delay?: string;
@@ -24,6 +26,7 @@ export default function ProductCard({
   description,
   price,
   originalPrice,
+  payzyX4,
   imageSrc,
   imageAlt,
   delay = "delay-100",
@@ -35,7 +38,7 @@ export default function ProductCard({
   const resolvedSizes = sizes ?? "(min-width: 1024px) 25vw, 50vw";
   const CardInner = (
     <div className={`group relative animate-fade-in-up ${delay}`}>
-      <div className="relative rounded-2xl bg-white border border-gray-100 overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-gray-200/60 hover:-translate-y-1.5 hover:border-gray-200">
+      <div className="relative rounded-2xl bg-white border border-gray-300 overflow-hidden shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-gray-200/60 hover:-translate-y-1.5 hover:border-gray-400">
         <div className="relative aspect-[4/5] w-full max-h-[360px] overflow-hidden bg-gray-50">
           {label ? (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-full bg-gray-900/80 backdrop-blur-md text-white text-[9px] font-semibold tracking-wider uppercase shadow-lg whitespace-nowrap">
@@ -56,7 +59,7 @@ export default function ProductCard({
           />
         </div>
 
-        <div className="p-4 space-y-3">
+        <div className="p-4 space-y-2.5">
           <div>
             <h3 className="text-sm sm:text-base font-semibold text-gray-900 line-clamp-1 sm:line-clamp-2 font-saira">
               {name}
@@ -75,6 +78,16 @@ export default function ProductCard({
             )}
             <span className="text-sm sm:text-base font-bold text-gray-900 font-saira whitespace-nowrap">{price}</span>
           </div>
+          {payzyX4 && (
+            <div className="flex items-center gap-1.5">
+              <Image src={payzyLogo} alt="Payzy" width={24} height={24} className="rounded-md shrink-0" />
+              <span className="text-[10px] sm:text-[11px] text-gray-500 font-saira whitespace-nowrap">or</span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-gray-800 font-saira whitespace-nowrap">
+                {payzyX4}
+              </span>
+              <span className="text-[10px] sm:text-[11px] text-gray-500 font-saira whitespace-nowrap">x 4</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

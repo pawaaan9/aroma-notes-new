@@ -157,11 +157,10 @@ export default function AdminDashboard() {
   }, [orders]);
 
   const statusBreakdown = useMemo(() => {
-    const pending = orders.filter((o) => o.status === "pending").length;
-    const processing = orders.filter((o) => o.status === "processing").length;
+    const confirmed = orders.filter((o) => o.status === "confirmed" || o.status === "pending" || o.status === "processing").length;
     const shipped = orders.filter((o) => o.status === "sent_to_courier").length;
     const cancelled = orders.filter((o) => o.status === "cancelled").length;
-    return { pending, processing, shipped, cancelled };
+    return { confirmed, shipped, cancelled };
   }, [orders]);
 
   const statCards = [
@@ -319,8 +318,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-400 font-saira mb-3 uppercase tracking-wider">By Status</p>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Pending", value: statusBreakdown.pending, color: "text-amber-400", bg: "bg-amber-500/10" },
-                { label: "Processing", value: statusBreakdown.processing, color: "text-blue-400", bg: "bg-blue-500/10" },
+                { label: "Confirmed", value: statusBreakdown.confirmed, color: "text-blue-400", bg: "bg-blue-500/10" },
                 { label: "Shipped", value: statusBreakdown.shipped, color: "text-emerald-400", bg: "bg-emerald-500/10" },
                 { label: "Cancelled", value: statusBreakdown.cancelled, color: "text-red-400", bg: "bg-red-500/10" },
               ].map((s) => (

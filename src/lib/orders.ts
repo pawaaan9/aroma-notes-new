@@ -19,7 +19,7 @@ import { db } from "@/lib/firebase";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-export type OrderStatus = "pending" | "processing" | "sent_to_courier" | "cancelled";
+export type OrderStatus = "pending" | "processing" | "confirmed" | "sent_to_courier" | "cancelled";
 
 export type PaymentMethod = "cod" | "bank_deposit" | "payzy";
 
@@ -83,10 +83,11 @@ function mapDocToOrder(id: string, data: Record<string, any>): Order {
 
   const normalizeStatus = (status: unknown): OrderStatus => {
     if (status === "completed") return "sent_to_courier";
-    if (status === "pending" || status === "processing" || status === "sent_to_courier" || status === "cancelled") {
-      return status;
+    if (status === "pending" || status === "processing") return "confirmed";
+    if (status === "confirmed" || status === "sent_to_courier" || status === "cancelled") {
+      return status as OrderStatus;
     }
-    return "pending";
+    return "confirmed";
   };
 
   return {
@@ -141,7 +142,7 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     subtotal: input.subtotal,
     deliveryFee: input.deliveryFee,
     total: input.total,
-    status: "pending" as OrderStatus,
+    status: "confirmed" as OrderStatus,
     paymentMethod: input.paymentMethod,
     customer: input.customer,
     createdAt: serverTimestamp(),
@@ -164,7 +165,7 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     subtotal: input.subtotal,
     deliveryFee: input.deliveryFee,
     total: input.total,
-    status: "pending",
+    status: "confirmed",
     paymentMethod: input.paymentMethod,
     bankSlipUrl: input.bankSlipUrl,
     customer: input.customer,

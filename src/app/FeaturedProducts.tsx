@@ -16,6 +16,7 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
         const discountPrice = target?.discountPrice ?? null;
         const displayPrice = discountPrice != null ? formatLkr(discountPrice) : originalPrice != null ? formatLkr(originalPrice) : "";
         const displayOriginalPrice = discountPrice != null && originalPrice != null ? formatLkr(originalPrice) : undefined;
+        const payzyX4 = originalPrice != null ? formatLkr(originalPrice / 4) : undefined;
 
         return (
           <div key={product._id}>
@@ -23,6 +24,7 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
               name={product.name}
               price={displayPrice}
               originalPrice={displayOriginalPrice}
+              payzyX4={payzyX4}
               imageSrc={imageSrc}
               imageAlt={product.name}
               delay={`delay-${(index + 1) * 100}`}
