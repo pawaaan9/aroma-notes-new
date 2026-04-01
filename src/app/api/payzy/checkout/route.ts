@@ -10,6 +10,13 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!process.env.PAYZY_SHOP_ID?.trim() || !process.env.PAYZY_SECRET_KEY?.trim()) {
+      return NextResponse.json(
+        { error: "Payzy is not configured (missing PAYZY_SHOP_ID or PAYZY_SECRET_KEY)" },
+        { status: 500 },
+      );
+    }
+
     const body = await request.json();
     const {
       orderId,

@@ -47,7 +47,14 @@ export const VERIFY_SIGNED_FIELD_NAMES =
 
 export const PAYZY_API_URL =
   process.env.PAYZY_API_URL?.trim() ||
-  "https://api.payzypay.xyz/checkout/custom-checkout";
+  "https://api.payzy.lk/checkout/custom-checkout";
+
+/** Live: off. Sandbox: set PAYZY_TEST_MODE=on (or true / 1). */
+function payzyTestModeFlag(): "on" | "off" {
+  const v = (process.env.PAYZY_TEST_MODE ?? "").trim().toLowerCase();
+  if (v === "on" || v === "true" || v === "1" || v === "yes") return "on";
+  return "off";
+}
 
 function hmacSha256Base64(data: string, key: string): string {
   return crypto.createHmac("sha256", key).update(data).digest("base64");
@@ -192,8 +199,8 @@ export function buildPayzyFields(params: {
   const state = params.state.trim() || params.city.trim();
   const zip = params.zip.trim() || "00000";
   return {
-    x_test_mode: (process.env.PAYZY_TEST_MODE ?? "on").trim(),
-    x_shopid: process.env.PAYZY_SHOP_ID!,
+    x_test_mode: payzyTestModeFlag(),
+    x_shopid: String(process.env.PAYZY_SHOP_ID ?? "").trim(),
     x_amount: formatPayzyMoney(params.amount),
     x_order_id: params.orderId,
     x_response_url: params.responseUrl,
