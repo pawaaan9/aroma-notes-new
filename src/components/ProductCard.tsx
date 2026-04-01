@@ -50,9 +50,11 @@ export default function ProductCard({
             src={imageSrc}
             fill
             sizes={resolvedSizes}
+            quality={68}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
             priority={priority}
+            fetchPriority={priority ? "high" : undefined}
           />
         </div>
         <div className="mt-3 flex flex-col">
@@ -95,9 +97,11 @@ export default function ProductCard({
             src={imageSrc}
             fill
             sizes={resolvedSizes}
+            quality={68}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
             priority={priority}
+            fetchPriority={priority ? "high" : undefined}
           />
         </div>
 

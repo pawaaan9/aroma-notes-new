@@ -2,8 +2,18 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import FeaturedProducts from "./FeaturedProducts";
 import NewArrivals from "./NewArrivals";
+import { getCachedProducts } from "@/lib/products-cache";
+
+export const revalidate = 120;
 
 export default async function Home() {
+  let allProducts: Awaited<ReturnType<typeof getCachedProducts>> = [];
+  try {
+    allProducts = await getCachedProducts();
+  } catch {
+    /* Firestore unavailable — sections hide gracefully */
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="absolute top-0 left-0 right-0 z-50">
@@ -105,7 +115,7 @@ export default async function Home() {
               <div className="w-32 h-1 bg-gradient-to-r from-amber-500 to-rose-500 mx-auto rounded-full mt-8 animate-fade-in-up delay-500" />
             </div>
 
-            <NewArrivals />
+            <NewArrivals products={allProducts.slice(0, 4)} />
 
             <div className="text-center mt-16 animate-fade-in-up delay-700">
               <a
@@ -168,7 +178,7 @@ export default async function Home() {
             </div>
             
             {/* Featured Products from DB */}
-            <FeaturedProducts />
+            <FeaturedProducts products={allProducts.slice(0, 8)} />
             
             {/* Call to Action */}
             <div className="text-center mt-16 sm:mt-20 animate-fade-in-up delay-700">

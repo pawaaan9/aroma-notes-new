@@ -1,22 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 export default function SplashScreen() {
   const [visible, setVisible] = useState(true);
   const pathname = usePathname();
+  const didRunSplash = useRef(false);
 
   const isAdmin = pathname.startsWith("/an-admin");
 
-  // Show splash on initial load and on every route change
+  // One short splash on first paint only — not on every client navigation (that blocked content & delayed images).
   useEffect(() => {
-    if (isAdmin) return;
-    setVisible(true);
-    const t = setTimeout(() => setVisible(false), 500);
+    if (isAdmin) {
+      setVisible(false);
+      return;
+    }
+    if (didRunSplash.current) return;
+    didRunSplash.current = true;
+    const t = setTimeout(() => setVisible(false), 220);
     return () => clearTimeout(t);
-  }, [pathname, isAdmin]);
+  }, [isAdmin]);
 
   if (isAdmin || !visible) return null;
 

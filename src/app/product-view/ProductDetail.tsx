@@ -34,9 +34,11 @@ export default function ProductDetail({ product }: Props) {
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
           className="object-contain"
+          quality={75}
           placeholder="blur"
           blurDataURL={BLUR_DATA_URL}
           priority
+          fetchPriority="high"
         />
       </div>
       <div className="font-saira">

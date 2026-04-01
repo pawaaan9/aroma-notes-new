@@ -119,6 +119,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${poppins.variable} ${smooch.variable} ${saira.variable} ${exo2.variable} ${audiowide.variable} bg-white font-sans text-gray-900 antialiased bg-perfume-gradient bg-perfume-paper bg-perfume-vignette`}
       >
