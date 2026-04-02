@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { formatLkr } from "@/utils/currency";
 import { createOrder, type OrderItem, type PaymentMethod } from "@/lib/orders";
-import { subscribeToSettings } from "@/lib/settings";
+import { loadSettings } from "@/lib/settings";
 import { upsertCustomerFromOrder } from "@/lib/customers";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
@@ -85,9 +85,9 @@ export default function CheckoutPage() {
   const { items, total, originalTotal, clear } = useCart();
   const [deliveryFeeConfig, setDeliveryFeeConfig] = useState<number | null>(null);
 
-  // Subscribe to delivery fee so it stays in sync with admin changes
+  // Load delivery fee: instant fetch + real-time sync + timeout fallback
   useEffect(() => {
-    const unsub = subscribeToSettings((s) => setDeliveryFeeConfig(s.deliveryFee));
+    const unsub = loadSettings((s) => setDeliveryFeeConfig(s.deliveryFee));
     return () => unsub();
   }, []);
   const [form, setForm] = useState<FormData>(() => {
@@ -112,8 +112,7 @@ export default function CheckoutPage() {
     paymentMethod: PaymentMethod;
   } | null>(null);
 
-  const settingsLoaded = deliveryFeeConfig !== null;
-  const DELIVERY_FEE = deliveryFeeConfig ?? 0;
+  const DELIVERY_FEE = deliveryFeeConfig ?? 350;
   const effectiveSubtotal = paymentMethod === "payzy" ? originalTotal : total;
   const deliveryFee = effectiveSubtotal > 0 ? DELIVERY_FEE : 0;
   const grandTotal = effectiveSubtotal + deliveryFee;
@@ -136,7 +135,30 @@ export default function CheckoutPage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    let { value } = e.target;
+
+    // Input-level restrictions
+    if (name === "phone") {
+      value = value.replace(/[^0-9+\-\s()]/g, "");
+      if (value.replace(/\D/g, "").length > 12) return;
+    }
+    if (name === "zip") {
+      value = value.replace(/[^0-9]/g, "");
+      if (value.length > 5) return;
+    }
+    if (name === "firstName" || name === "lastName") {
+      value = value.replace(/[0-9]/g, "");
+      if (value.length > 50) return;
+    }
+    if (name === "city") {
+      value = value.replace(/[0-9]/g, "");
+      if (value.length > 50) return;
+    }
+    if (name === "address" && value.length > 200) return;
+    if (name === "email" && value.length > 100) return;
+    if (name === "notes" && value.length > 500) return;
+
     setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name as keyof FormData]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -171,26 +193,61 @@ export default function CheckoutPage() {
 
   const validate = (): boolean => {
     const errs: Partial<FormData> = {};
-    if (!form.firstName.trim()) errs.firstName = "First name is required";
-    if (!form.lastName.trim()) errs.lastName = "Last name is required";
+
+    // First name
+    const firstName = form.firstName.trim();
+    if (!firstName) errs.firstName = "First name is required";
+    else if (firstName.length < 2) errs.firstName = "First name is too short";
+
+    // Last name
+    const lastName = form.lastName.trim();
+    if (!lastName) errs.lastName = "Last name is required";
+    else if (lastName.length < 2) errs.lastName = "Last name is too short";
+
+    // Phone — Sri Lankan numbers: 0xx-xxxxxxx (10 digits) or +94xxxxxxxxx
+    const phoneDigits = form.phone.replace(/\D/g, "");
     if (!form.phone.trim()) errs.phone = "Phone number is required";
-    if (!form.address.trim()) errs.address = "Address is required";
-    if (!form.city.trim()) errs.city = "City is required";
-    if (!form.state.trim()) errs.state = "State / province is required";
-    if (!form.zip.trim()) errs.zip = "Postal code is required";
-    if (!form.email.trim()) errs.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      errs.email = "Invalid email address";
-    }
+    else if (phoneDigits.length < 9 || phoneDigits.length > 12) errs.phone = "Enter a valid phone number";
+
+    // Email
+    const email = form.email.trim();
+    if (!email) errs.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Enter a valid email address";
+
+    // Address
+    const address = form.address.trim();
+    if (!address) errs.address = "Address is required";
+    else if (address.length < 5) errs.address = "Please enter your full address";
+
+    // City
+    const city = form.city.trim();
+    if (!city) errs.city = "City is required";
+    else if (city.length < 2) errs.city = "Enter a valid city name";
+
+    // Province
+    if (!form.state.trim()) errs.state = "Please select a province";
+
+    // Postal code — Sri Lankan zip codes are 5 digits
+    const zip = form.zip.trim();
+    if (!zip) errs.zip = "Postal code is required";
+    else if (!/^\d{5}$/.test(zip)) errs.zip = "Enter a valid 5-digit postal code";
+
     setErrors(errs);
 
-    // Slip is required for bank deposit
     if (paymentMethod === "bank_deposit" && !slipFile) {
       setSlipError("Please upload your bank deposit slip.");
+      return Object.keys(errs).length === 0 ? false : false;
+    }
+
+    if (Object.keys(errs).length > 0) {
+      const firstErrorField = Object.keys(errs)[0];
+      const el = document.querySelector<HTMLElement>(`[name="${firstErrorField}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
       return false;
     }
 
-    return Object.keys(errs).length === 0;
+    return true;
   };
 
   const uploadSlip = async (): Promise<string | undefined> => {
@@ -481,6 +538,8 @@ export default function CheckoutPage() {
                         value={form.firstName}
                         onChange={handleChange}
                         placeholder="John"
+                        autoComplete="given-name"
+                        maxLength={50}
                         className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.firstName
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
@@ -503,6 +562,8 @@ export default function CheckoutPage() {
                         value={form.lastName}
                         onChange={handleChange}
                         placeholder="Perera"
+                        autoComplete="family-name"
+                        maxLength={50}
                         className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.lastName
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
@@ -525,6 +586,9 @@ export default function CheckoutPage() {
                         value={form.phone}
                         onChange={handleChange}
                         placeholder="077 123 4567"
+                        autoComplete="tel"
+                        inputMode="tel"
+                        maxLength={15}
                         className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.phone
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
@@ -547,6 +611,9 @@ export default function CheckoutPage() {
                         value={form.email}
                         onChange={handleChange}
                         placeholder="john@example.com"
+                        autoComplete="email"
+                        inputMode="email"
+                        maxLength={100}
                         className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.email
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
@@ -569,6 +636,8 @@ export default function CheckoutPage() {
                         value={form.address}
                         onChange={handleChange}
                         placeholder="123, Temple Road, Dehiwala"
+                        autoComplete="street-address"
+                        maxLength={200}
                         className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.address
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
@@ -591,6 +660,8 @@ export default function CheckoutPage() {
                         value={form.city}
                         onChange={handleChange}
                         placeholder="Colombo"
+                        autoComplete="address-level2"
+                        maxLength={50}
                         className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.city
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
@@ -651,6 +722,9 @@ export default function CheckoutPage() {
                         value={form.zip}
                         onChange={handleChange}
                         placeholder="e.g. 10300"
+                        autoComplete="postal-code"
+                        inputMode="numeric"
+                        maxLength={5}
                         className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.zip
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
@@ -1021,7 +1095,7 @@ export default function CheckoutPage() {
                   {/* Place order button */}
                   <button
                     type="submit"
-                    disabled={submitting || !settingsLoaded}
+                    disabled={submitting}
                     className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-saira font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {submitting ? (

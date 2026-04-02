@@ -7,18 +7,18 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { formatLkr } from "@/utils/currency";
-import { subscribeToSettings } from "@/lib/settings";
+import { loadSettings } from "@/lib/settings";
 
 export default function CartPage() {
   const { items, count, total, updateQuantity, removeItem, clear } = useCart();
   const [deliveryFeeConfig, setDeliveryFeeConfig] = useState<number | null>(null);
 
   useEffect(() => {
-    const unsub = subscribeToSettings((s) => setDeliveryFeeConfig(s.deliveryFee));
+    const unsub = loadSettings((s) => setDeliveryFeeConfig(s.deliveryFee));
     return () => unsub();
   }, []);
 
-  const DELIVERY_FEE = deliveryFeeConfig ?? 0;
+  const DELIVERY_FEE = deliveryFeeConfig ?? 350;
   const deliveryFee = total > 0 ? DELIVERY_FEE : 0;
   const grandTotal = total + deliveryFee;
 

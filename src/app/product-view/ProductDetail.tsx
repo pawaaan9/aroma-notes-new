@@ -5,6 +5,7 @@ import type { Product as SanityProduct } from "@/types/product";
 import VariantSelector from "./VariantSelector";
 import MainAccordsChart from "./MainAccordsChart";
 import { useCart } from "@/contexts/CartContext";
+import { useCartDrawer } from "@/contexts/CartDrawerContext";
 
 const BLUR_DATA_URL =
   "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Crect fill='%23e5e7eb' width='4' height='5'/%3E%3C/svg%3E";
@@ -18,6 +19,7 @@ export default function ProductDetail({ product }: Props) {
   const [selectedIdx, setSelectedIdx] = useState<number>(-1);
   const [isAdding, setIsAdding] = useState(false);
   const { addItem } = useCart();
+  const { open: openCartDrawer } = useCartDrawer();
 
   const [sizeError, setSizeError] = useState(false);
   const selected = selectedIdx >= 0 ? (variants[selectedIdx] ?? null) : null;
@@ -124,9 +126,13 @@ export default function ProductDetail({ product }: Props) {
                 setTimeout(() => {
                   clone.remove();
                   setIsAdding(false);
+                  openCartDrawer();
                 }, 750);
               } else {
-                setTimeout(() => setIsAdding(false), 500);
+                setTimeout(() => {
+                  setIsAdding(false);
+                  openCartDrawer();
+                }, 500);
               }
             }}
             aria-busy={isAdding}
