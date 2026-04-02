@@ -1,6 +1,5 @@
 import {
   doc,
-  getDoc,
   setDoc,
   onSnapshot,
   type Unsubscribe,
@@ -18,26 +17,50 @@ export type StoreSettings = {
 const SETTINGS_DOC = doc(db, "settings", "store");
 
 /* ------------------------------------------------------------------ */
-/*  API-based fetch (works in every browser, no Firestore auth needed) */
+/*  Client-side env var fallback                                       */
 /* ------------------------------------------------------------------ */
 
-async function fetchSettingsViaApi(): Promise<StoreSettings> {
+function envFallback(): number {
+  const v = typeof window !== "undefined"
+    ? (process.env.NEXT_PUBLIC_DELIVERY_FEE ?? "0")
+    : "0";
+  return Number(v) || 0;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Read via /api/settings (server handles Firestore + fallback)       */
+/* ------------------------------------------------------------------ */
+
+async function fetchViaApi(): Promise<StoreSettings> {
   const res = await fetch("/api/settings", { cache: "no-store" });
-  if (!res.ok) throw new Error("API settings fetch failed");
+  if (!res.ok) throw new Error(`API ${res.status}`);
   const data = await res.json();
-  return { deliveryFee: typeof data.deliveryFee === "number" ? data.deliveryFee : 0 };
+  if (typeof data.deliveryFee === "number" && data.deliveryFee > 0) {
+    return { deliveryFee: data.deliveryFee };
+  }
+  throw new Error("No delivery fee returned");
 }
 
 /* ------------------------------------------------------------------ */
-/*  Read                                                               */
+/*  Public API                                                         */
 /* ------------------------------------------------------------------ */
 
-/** Fetch store settings once via API route (reliable in all browsers). */
+/** Fetch settings via API, with retries, with env var fallback. */
 export async function fetchSettings(): Promise<StoreSettings> {
-  return fetchSettingsViaApi();
+  for (let i = 0; i < 3; i++) {
+    try {
+      return await fetchViaApi();
+    } catch {
+      if (i < 2) await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+  // Last resort: env var
+  const fee = envFallback();
+  if (fee > 0) return { deliveryFee: fee };
+  throw new Error("Failed to load delivery fee");
 }
 
-/** Real-time listener for store settings (used by admin panel). */
+/** Real-time listener (used by admin panel where user is authenticated). */
 export function subscribeToSettings(
   callback: (settings: StoreSettings) => void,
 ): Unsubscribe {
@@ -51,51 +74,61 @@ export function subscribeToSettings(
         });
       }
     },
-    () => { /* ignore errors */ },
+    () => {},
   );
 }
 
 /**
  * Robust settings loader for customer-facing pages.
- * Uses the /api/settings endpoint (server-side, works everywhere) with
- * retry logic. Also starts a Firestore listener as a bonus for live updates.
+ * 1. Calls /api/settings (server-side, tries Admin SDK + Client SDK + env var)
+ * 2. Falls back to NEXT_PUBLIC_DELIVERY_FEE env var
+ * 3. Also starts Firestore listener for live updates (may or may not work)
  */
 export function loadSettings(
   callback: (settings: StoreSettings) => void,
 ): Unsubscribe {
   let alive = true;
+  let resolved = false;
 
-  const deliver = (s: StoreSettings) => {
-    if (alive) callback(s);
-  };
-
-  // Primary path: fetch via API route (works in all browsers)
+  // Primary: API route
   (async () => {
     for (let attempt = 0; attempt < 3; attempt++) {
       if (!alive) return;
       try {
-        const settings = await fetchSettingsViaApi();
-        deliver(settings);
+        const settings = await fetchViaApi();
+        if (alive) {
+          resolved = true;
+          callback(settings);
+        }
         return;
       } catch {
         if (!alive) return;
         await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
       }
     }
+    // API failed — use env var
+    if (alive && !resolved) {
+      const fee = envFallback();
+      if (fee > 0) {
+        resolved = true;
+        callback({ deliveryFee: fee });
+      }
+    }
   })();
 
-  // Secondary path: Firestore real-time listener (bonus, keeps value fresh)
+  // Secondary: Firestore listener (bonus, works when auth/rules allow)
   const unsub = onSnapshot(
     SETTINGS_DOC,
     (snap) => {
-      if (snap.exists()) {
+      if (alive && snap.exists()) {
         const data = snap.data();
-        if (typeof data.deliveryFee === "number") {
-          deliver({ deliveryFee: data.deliveryFee });
+        if (typeof data.deliveryFee === "number" && data.deliveryFee > 0) {
+          resolved = true;
+          callback({ deliveryFee: data.deliveryFee });
         }
       }
     },
-    () => { /* ignore — API path is the primary */ },
+    () => {},
   );
 
   return () => {
