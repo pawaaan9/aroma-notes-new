@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { formatLkr } from "@/utils/currency";
 import { createOrder, type OrderItem, type PaymentMethod } from "@/lib/orders";
-import { loadSettings } from "@/lib/settings";
+import { loadSettings, fetchSettings } from "@/lib/settings";
 import { upsertCustomerFromOrder } from "@/lib/customers";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
@@ -112,7 +112,8 @@ export default function CheckoutPage() {
     paymentMethod: PaymentMethod;
   } | null>(null);
 
-  const DELIVERY_FEE = deliveryFeeConfig ?? 350;
+  const settingsReady = deliveryFeeConfig !== null;
+  const DELIVERY_FEE = deliveryFeeConfig ?? 0;
   const effectiveSubtotal = paymentMethod === "payzy" ? originalTotal : total;
   const deliveryFee = effectiveSubtotal > 0 ? DELIVERY_FEE : 0;
   const grandTotal = effectiveSubtotal + deliveryFee;
@@ -265,6 +266,21 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     try {
+      // Always fetch fresh delivery fee from DB at order time
+      let finalDeliveryFee = deliveryFee;
+      try {
+        const freshSettings = await fetchSettings();
+        finalDeliveryFee = effectiveSubtotal > 0 ? freshSettings.deliveryFee : 0;
+        setDeliveryFeeConfig(freshSettings.deliveryFee);
+      } catch {
+        if (deliveryFeeConfig === null) {
+          alert("Unable to load delivery charges. Please check your connection and try again.");
+          setSubmitting(false);
+          return;
+        }
+      }
+      const finalTotal = effectiveSubtotal + finalDeliveryFee;
+
       // Upload slip first if bank deposit
       let bankSlipUrl: string | undefined;
       if (paymentMethod === "bank_deposit") {
@@ -300,8 +316,8 @@ export default function CheckoutPage() {
       const order = await createOrder({
         items: orderItems,
         subtotal: effectiveSubtotal,
-        deliveryFee,
-        total: grandTotal,
+        deliveryFee: finalDeliveryFee,
+        total: finalTotal,
         paymentMethod,
         bankSlipUrl,
         customer,
@@ -322,8 +338,8 @@ export default function CheckoutPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             orderId: order.id,
-            amount: grandTotal,
-            deliveryFee,
+            amount: finalTotal,
+            deliveryFee: finalDeliveryFee,
             firstName: form.firstName.trim(),
             lastName: form.lastName.trim(),
             company: "",
@@ -347,7 +363,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      setOrderPlaced({ orderNumber: order.orderNumber, total: order.total, paymentMethod });
+      setOrderPlaced({ orderNumber: order.orderNumber, total: finalTotal, paymentMethod });
       clear();
       localStorage.removeItem("aroma-notes:checkout-form");
 
@@ -369,8 +385,8 @@ export default function CheckoutPage() {
             price: it.price,
           })),
           subtotal: effectiveSubtotal,
-          deliveryFee,
-          total: grandTotal,
+          deliveryFee: finalDeliveryFee,
+          total: finalTotal,
           paymentMethod,
           address: customer.address,
           city: customer.city,
@@ -1080,14 +1096,22 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-sm font-saira">
                       <span className="text-gray-600">Delivery</span>
-                      <span className="font-medium text-gray-900">{formatLkr(deliveryFee)}</span>
+                      {settingsReady ? (
+                        <span className="font-medium text-gray-900">{formatLkr(deliveryFee)}</span>
+                      ) : (
+                        <span className="inline-block h-4 w-16 animate-pulse rounded bg-gray-200" />
+                      )}
                     </div>
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between font-saira">
                         <span className="font-semibold text-gray-900">Total</span>
-                        <span className="text-lg font-bold text-primary">
-                          {formatLkr(grandTotal)}
-                        </span>
+                        {settingsReady ? (
+                          <span className="text-lg font-bold text-primary">
+                            {formatLkr(grandTotal)}
+                          </span>
+                        ) : (
+                          <span className="inline-block h-5 w-20 animate-pulse rounded bg-gray-200" />
+                        )}
                       </div>
                     </div>
                   </div>

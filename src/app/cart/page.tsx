@@ -18,7 +18,8 @@ export default function CartPage() {
     return () => unsub();
   }, []);
 
-  const DELIVERY_FEE = deliveryFeeConfig ?? 350;
+  const settingsReady = deliveryFeeConfig !== null;
+  const DELIVERY_FEE = deliveryFeeConfig ?? 0;
   const deliveryFee = total > 0 ? DELIVERY_FEE : 0;
   const grandTotal = total + deliveryFee;
 
@@ -165,12 +166,20 @@ export default function CartPage() {
                     </div>
                     <div className="flex justify-between text-sm font-saira">
                       <span className="text-gray-600">Delivery</span>
-                      <span className="font-medium text-gray-900">{formatLkr(deliveryFee)}</span>
+                      {settingsReady ? (
+                        <span className="font-medium text-gray-900">{formatLkr(deliveryFee)}</span>
+                      ) : (
+                        <span className="inline-block h-4 w-16 animate-pulse rounded bg-gray-200" />
+                      )}
                     </div>
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between font-saira">
                         <span className="font-semibold text-gray-900">Total</span>
-                        <span className="text-lg font-bold text-primary">{formatLkr(grandTotal)}</span>
+                        {settingsReady ? (
+                          <span className="text-lg font-bold text-primary">{formatLkr(grandTotal)}</span>
+                        ) : (
+                          <span className="inline-block h-5 w-20 animate-pulse rounded bg-gray-200" />
+                        )}
                       </div>
                     </div>
                   </div>

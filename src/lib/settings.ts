@@ -15,81 +15,106 @@ export type StoreSettings = {
   deliveryFee: number;
 };
 
-const DEFAULTS: StoreSettings = {
-  deliveryFee: 350,
-};
-
 const SETTINGS_DOC = doc(db, "settings", "store");
 
 /* ------------------------------------------------------------------ */
 /*  Read                                                               */
 /* ------------------------------------------------------------------ */
 
-/** Fetch store settings once. Returns defaults if doc doesn't exist. */
-export async function fetchSettings(): Promise<StoreSettings> {
-  const snap = await getDoc(SETTINGS_DOC);
-  if (!snap.exists()) return { ...DEFAULTS };
-  const data = snap.data();
-  return {
-    deliveryFee:
-      typeof data.deliveryFee === "number" ? data.deliveryFee : DEFAULTS.deliveryFee,
-  };
+/** Fetch store settings once (with retry). */
+export async function fetchSettings(retries = 3): Promise<StoreSettings> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const snap = await getDoc(SETTINGS_DOC);
+      if (snap.exists()) {
+        const data = snap.data();
+        if (typeof data.deliveryFee === "number") {
+          return { deliveryFee: data.deliveryFee };
+        }
+      }
+      break;
+    } catch {
+      if (i < retries - 1) {
+        await new Promise((r) => setTimeout(r, 500 * (i + 1)));
+      }
+    }
+  }
+  throw new Error("Failed to load store settings");
 }
 
-/** Real-time listener for store settings. Falls back to defaults on error. */
+/** Real-time listener for store settings (used by admin panel). */
 export function subscribeToSettings(
   callback: (settings: StoreSettings) => void,
 ): Unsubscribe {
   return onSnapshot(
     SETTINGS_DOC,
     (snap) => {
-      if (!snap.exists()) {
-        callback({ ...DEFAULTS });
-        return;
+      if (snap.exists()) {
+        const data = snap.data();
+        callback({
+          deliveryFee:
+            typeof data.deliveryFee === "number" ? data.deliveryFee : 0,
+        });
       }
-      const data = snap.data();
-      callback({
-        deliveryFee:
-          typeof data.deliveryFee === "number" ? data.deliveryFee : DEFAULTS.deliveryFee,
-      });
     },
-    () => {
-      callback({ ...DEFAULTS });
-    },
+    () => { /* ignore errors */ },
   );
 }
 
 /**
- * Robust settings loader: fires callback ASAP via getDoc, then keeps it
- * updated via onSnapshot. If both fail, falls back to DEFAULTS after timeout.
+ * Robust settings loader for UI components. Calls `callback` as soon as
+ * the delivery fee is known. Retries `getDoc` up to 3 times, and also
+ * starts an `onSnapshot` listener in parallel. Whichever resolves first
+ * wins. Subsequent onSnapshot updates keep the value fresh.
+ *
  * Returns an unsubscribe function.
  */
 export function loadSettings(
   callback: (settings: StoreSettings) => void,
 ): Unsubscribe {
-  let resolved = false;
-  const resolve = (s: StoreSettings) => {
-    resolved = true;
-    callback(s);
+  let alive = true;
+
+  const deliver = (s: StoreSettings) => {
+    if (alive) callback(s);
   };
 
-  // 1. One-time fetch (works in all browsers, even when websockets fail)
-  fetchSettings()
-    .then((s) => resolve(s))
-    .catch(() => {
-      if (!resolved) resolve({ ...DEFAULTS });
-    });
+  // Path 1: one-time fetch with retry (works when WebSockets are blocked)
+  (async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const snap = await getDoc(SETTINGS_DOC);
+        if (!alive) return;
+        if (snap.exists()) {
+          const data = snap.data();
+          if (typeof data.deliveryFee === "number") {
+            deliver({ deliveryFee: data.deliveryFee });
+            return;
+          }
+        }
+        break;
+      } catch {
+        if (!alive) return;
+        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+      }
+    }
+  })();
 
-  // 2. Real-time updates for when admin changes the fee
-  const unsub = subscribeToSettings((s) => resolve(s));
-
-  // 3. Safety net: if nothing fires within 4s, use defaults
-  const timer = setTimeout(() => {
-    if (!resolved) resolve({ ...DEFAULTS });
-  }, 4000);
+  // Path 2: real-time listener (works when WebSockets are available)
+  const unsub = onSnapshot(
+    SETTINGS_DOC,
+    (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (typeof data.deliveryFee === "number") {
+          deliver({ deliveryFee: data.deliveryFee });
+        }
+      }
+    },
+    () => { /* ignore snapshot errors — fetch path covers it */ },
+  );
 
   return () => {
-    clearTimeout(timer);
+    alive = false;
     unsub();
   };
 }
