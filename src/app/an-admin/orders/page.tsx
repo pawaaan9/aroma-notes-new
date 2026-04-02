@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import {
   subscribeToOrders,
   updateOrderStatus,
@@ -473,12 +474,18 @@ function OrderDetailModal({
 /* ------------------------------------------------------------------ */
 
 export default function OrdersPage() {
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
+
+  const qFromUrl = searchParams.get("q");
+  useEffect(() => {
+    if (qFromUrl) setSearch(qFromUrl);
+  }, [qFromUrl]);
 
   // Real-time subscription — hide PayZy orders that haven't been paid yet
   useEffect(() => {
