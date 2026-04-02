@@ -18,28 +18,23 @@ export type StoreSettings = {
 const SETTINGS_DOC = doc(db, "settings", "store");
 
 /* ------------------------------------------------------------------ */
+/*  API-based fetch (works in every browser, no Firestore auth needed) */
+/* ------------------------------------------------------------------ */
+
+async function fetchSettingsViaApi(): Promise<StoreSettings> {
+  const res = await fetch("/api/settings", { cache: "no-store" });
+  if (!res.ok) throw new Error("API settings fetch failed");
+  const data = await res.json();
+  return { deliveryFee: typeof data.deliveryFee === "number" ? data.deliveryFee : 0 };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Read                                                               */
 /* ------------------------------------------------------------------ */
 
-/** Fetch store settings once (with retry). */
-export async function fetchSettings(retries = 3): Promise<StoreSettings> {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const snap = await getDoc(SETTINGS_DOC);
-      if (snap.exists()) {
-        const data = snap.data();
-        if (typeof data.deliveryFee === "number") {
-          return { deliveryFee: data.deliveryFee };
-        }
-      }
-      break;
-    } catch {
-      if (i < retries - 1) {
-        await new Promise((r) => setTimeout(r, 500 * (i + 1)));
-      }
-    }
-  }
-  throw new Error("Failed to load store settings");
+/** Fetch store settings once via API route (reliable in all browsers). */
+export async function fetchSettings(): Promise<StoreSettings> {
+  return fetchSettingsViaApi();
 }
 
 /** Real-time listener for store settings (used by admin panel). */
@@ -52,8 +47,7 @@ export function subscribeToSettings(
       if (snap.exists()) {
         const data = snap.data();
         callback({
-          deliveryFee:
-            typeof data.deliveryFee === "number" ? data.deliveryFee : 0,
+          deliveryFee: typeof data.deliveryFee === "number" ? data.deliveryFee : 0,
         });
       }
     },
@@ -62,12 +56,9 @@ export function subscribeToSettings(
 }
 
 /**
- * Robust settings loader for UI components. Calls `callback` as soon as
- * the delivery fee is known. Retries `getDoc` up to 3 times, and also
- * starts an `onSnapshot` listener in parallel. Whichever resolves first
- * wins. Subsequent onSnapshot updates keep the value fresh.
- *
- * Returns an unsubscribe function.
+ * Robust settings loader for customer-facing pages.
+ * Uses the /api/settings endpoint (server-side, works everywhere) with
+ * retry logic. Also starts a Firestore listener as a bonus for live updates.
  */
 export function loadSettings(
   callback: (settings: StoreSettings) => void,
@@ -78,28 +69,22 @@ export function loadSettings(
     if (alive) callback(s);
   };
 
-  // Path 1: one-time fetch with retry (works when WebSockets are blocked)
+  // Primary path: fetch via API route (works in all browsers)
   (async () => {
     for (let attempt = 0; attempt < 3; attempt++) {
+      if (!alive) return;
       try {
-        const snap = await getDoc(SETTINGS_DOC);
-        if (!alive) return;
-        if (snap.exists()) {
-          const data = snap.data();
-          if (typeof data.deliveryFee === "number") {
-            deliver({ deliveryFee: data.deliveryFee });
-            return;
-          }
-        }
-        break;
+        const settings = await fetchSettingsViaApi();
+        deliver(settings);
+        return;
       } catch {
         if (!alive) return;
-        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
       }
     }
   })();
 
-  // Path 2: real-time listener (works when WebSockets are available)
+  // Secondary path: Firestore real-time listener (bonus, keeps value fresh)
   const unsub = onSnapshot(
     SETTINGS_DOC,
     (snap) => {
@@ -110,7 +95,7 @@ export function loadSettings(
         }
       }
     },
-    () => { /* ignore snapshot errors — fetch path covers it */ },
+    () => { /* ignore — API path is the primary */ },
   );
 
   return () => {
