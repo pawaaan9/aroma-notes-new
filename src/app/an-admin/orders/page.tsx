@@ -67,6 +67,7 @@ const PAYMENT_CONFIG: Record<PaymentMethod, { label: string; bg: string; text: s
   cod: { label: "Cash on Delivery", bg: "bg-amber-500/10", text: "text-amber-400", icon: "cash" },
   bank_deposit: { label: "Bank Deposit", bg: "bg-blue-500/10", text: "text-blue-400", icon: "bank" },
   payzy: { label: "Payzy", bg: "bg-purple-500/10", text: "text-purple-400", icon: "card" },
+  advance: { label: "Advanced Payment", bg: "bg-emerald-500/10", text: "text-emerald-400", icon: "cash" },
 };
 
 function PaymentBadge({ method }: { method: PaymentMethod }) {

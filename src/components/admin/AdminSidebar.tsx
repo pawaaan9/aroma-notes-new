@@ -4,15 +4,47 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 
 interface NavItem {
   label: string;
   href: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
 }
 
-const navItems: NavItem[] = [
+const INVOICE_PREFIX = "/an-admin/invoice";
+
+const invoiceSubItems: { label: string; href: string }[] = [
+  { label: "Full payments", href: `${INVOICE_PREFIX}/full-payments` },
+  { label: "Advanced payments", href: `${INVOICE_PREFIX}/advanced-payments` },
+];
+
+const invoiceIcon = (
+  <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.75}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"
+    />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14 2v6h6" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 13h8M8 17h8M8 9h2.5" />
+  </svg>
+);
+
+const invoiceSubIcons: Record<string, ReactNode> = {
+  [`${INVOICE_PREFIX}/full-payments`]: (
+    <svg className="h-4 w-4 shrink-0 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  ),
+  [`${INVOICE_PREFIX}/advanced-payments`]: (
+    <svg className="h-4 w-4 shrink-0 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  ),
+};
+
+const navItemsTop: NavItem[] = [
   {
     label: "Dashboard",
     href: "/an-admin",
@@ -49,6 +81,9 @@ const navItems: NavItem[] = [
       </svg>
     ),
   },
+];
+
+const navItemsBottom: NavItem[] = [
   {
     label: "Customers",
     href: "/an-admin/customers",
@@ -76,10 +111,15 @@ export default function AdminSidebar({ user }: { user: User | null }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(() => pathname.startsWith(INVOICE_PREFIX));
 
   // Close mobile sidebar on route change
   useEffect(() => {
     setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (pathname.startsWith(INVOICE_PREFIX)) setInvoiceOpen(true);
   }, [pathname]);
 
   // Prevent scroll when mobile sidebar open
@@ -108,6 +148,27 @@ export default function AdminSidebar({ user }: { user: User | null }) {
     setMobileOpen(false);
   };
 
+  const isInvoiceActive = pathname.startsWith(INVOICE_PREFIX);
+
+  const toggleInvoiceSection = () => {
+    if (collapsed) {
+      router.push(invoiceSubItems[0]?.href ?? `${INVOICE_PREFIX}/full-payments`);
+      setMobileOpen(false);
+      return;
+    }
+    setInvoiceOpen((o) => !o);
+  };
+
+  const navButtonClass = (active: boolean) =>
+    `group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 font-saira ${
+      active
+        ? "bg-gradient-to-r from-amber-500/20 to-rose-500/20 text-white shadow-lg shadow-amber-500/5"
+        : "text-gray-400 hover:bg-white/5 hover:text-white"
+    }`;
+
+  const navIconWrapClass = (active: boolean) =>
+    `shrink-0 ${active ? "text-amber-400" : "text-gray-500 group-hover:text-gray-300"}`;
+
   const sidebarContent = (
     <>
       {/* Logo / Brand */}
@@ -133,31 +194,99 @@ export default function AdminSidebar({ user }: { user: User | null }) {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4">
-        {navItems.map((item) => (
-          <button
-            key={item.href}
-            onClick={() => handleNav(item.href)}
-            className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 font-saira ${
-              isActive(item.href)
-                ? "bg-gradient-to-r from-amber-500/20 to-rose-500/20 text-white shadow-lg shadow-amber-500/5"
-                : "text-gray-400 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span
-              className={`shrink-0 ${
-                isActive(item.href)
-                  ? "text-amber-400"
-                  : "text-gray-500 group-hover:text-gray-300"
-              }`}
+        {navItemsTop.map((item) => {
+          const active = isActive(item.href);
+          return (
+            <button
+              key={item.href}
+              type="button"
+              onClick={() => handleNav(item.href)}
+              className={navButtonClass(active)}
             >
-              {item.icon}
-            </span>
-            {!collapsed && <span>{item.label}</span>}
-            {isActive(item.href) && !collapsed && (
+              <span className={navIconWrapClass(active)}>{item.icon}</span>
+              {!collapsed && <span>{item.label}</span>}
+              {active && !collapsed && (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-400" />
+              )}
+            </button>
+          );
+        })}
+
+        <div className="space-y-0.5">
+          <button
+            type="button"
+            onClick={toggleInvoiceSection}
+            aria-expanded={!collapsed ? invoiceOpen : undefined}
+            className={navButtonClass(isInvoiceActive)}
+          >
+            <span className={navIconWrapClass(isInvoiceActive)}>{invoiceIcon}</span>
+            {!collapsed && <span className="text-left">Invoice</span>}
+            {!collapsed && (
+              <svg
+                className={`ml-auto h-4 w-4 shrink-0 text-gray-500 transition-transform duration-200 ${invoiceOpen ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            )}
+            {isInvoiceActive && collapsed && (
               <span className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-400" />
             )}
           </button>
-        ))}
+          {!collapsed && invoiceOpen && (
+            <div className="mt-1 space-y-1 rounded-xl border border-white/10 bg-white/[0.04] p-1 ml-0.5">
+              {invoiceSubItems.map((sub) => {
+                const subActive = pathname === sub.href;
+                const icon = invoiceSubIcons[sub.href];
+                return (
+                  <button
+                    key={sub.href}
+                    type="button"
+                    onClick={() => handleNav(sub.href)}
+                    className={`group flex w-full flex-nowrap items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm font-semibold transition-colors font-saira ${
+                      subActive
+                        ? "bg-amber-500/20 text-amber-50 ring-1 ring-amber-400/40 shadow-sm shadow-amber-500/10"
+                        : "text-gray-200 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    <span
+                      className={`shrink-0 ${
+                        subActive ? "text-amber-300" : "text-gray-400 group-hover:text-gray-200"
+                      }`}
+                    >
+                      {icon}
+                    </span>
+                    <span className="whitespace-nowrap">{sub.label}</span>
+                    {subActive ? (
+                      <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {navItemsBottom.map((item) => {
+          const active = isActive(item.href);
+          return (
+            <button
+              key={item.href}
+              type="button"
+              onClick={() => handleNav(item.href)}
+              className={navButtonClass(active)}
+            >
+              <span className={navIconWrapClass(active)}>{item.icon}</span>
+              {!collapsed && <span>{item.label}</span>}
+              {active && !collapsed && (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-400" />
+              )}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Collapse toggle — desktop only */}
@@ -247,7 +376,7 @@ export default function AdminSidebar({ user }: { user: User | null }) {
       {/* Desktop sidebar — fixed height, never scrolls with page */}
       <aside
         className={`hidden lg:flex h-screen flex-col shrink-0 border-r border-white/10 bg-gray-900 transition-all duration-300 ${
-          collapsed ? "w-[72px]" : "w-[240px]"
+          collapsed ? "w-[72px]" : "w-[260px]"
         }`}
       >
         {sidebarContent}

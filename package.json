@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
+    "@react-pdf/renderer": "^4.5.1",
     "firebase": "^12.9.0",
     "firebase-admin": "^13.7.0",
     "lucide-react": "^0.546.0",

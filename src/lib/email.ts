@@ -1,4 +1,6 @@
 import nodemailer from "nodemailer";
+import { generateInvoicePdfBuffer, invoiceFileName } from "@/lib/invoice/generator";
+import type { InvoiceData, InvoiceLineItem } from "@/lib/invoice/types";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -7,6 +9,73 @@ const transporter = nodemailer.createTransport({
     pass: process.env.GMAIL_APP_PASSWORD,
   },
 });
+
+function paymentLabelForInvoice(method: string): string {
+  switch (method) {
+    case "cod":
+      return "Cash on Delivery";
+    case "bank_deposit":
+      return "Bank Deposit";
+    case "payzy":
+      return "Payzy";
+    case "advance":
+      return "Advanced Payment";
+    default:
+      return method;
+  }
+}
+
+function buildInvoiceFromOrderEmail(
+  data: OrderEmailData,
+  opts?: { paidNow?: boolean },
+): InvoiceData {
+  const items: InvoiceLineItem[] = data.items.map((it) => ({
+    brand: it.brand ?? null,
+    name: it.name,
+    note: "Exclusive Import · Yusuf Bhai Collection",
+    size: it.size ?? null,
+    quantity: it.quantity,
+    unitPrice: it.price,
+  }));
+
+  const now = new Date();
+  const tail = (data.orderNumber || data.orderId || "")
+    .replace(/[^A-Za-z0-9]/g, "")
+    .slice(-6)
+    .toUpperCase();
+  const invoiceNumber = `AN-${now.getFullYear()}-${tail || "000000"}`;
+
+  const payzyPlan =
+    data.paymentMethod === "payzy" && data.total > 0
+      ? { installments: 4, perInstallment: Math.round(data.total / 4) }
+      : null;
+
+  const status: InvoiceData["status"] =
+    opts?.paidNow || data.paymentMethod === "payzy" ? "paid" : "awaiting";
+
+  return {
+    invoiceNumber,
+    orderNumber: data.orderNumber,
+    invoiceDate: now,
+    paymentLabel: paymentLabelForInvoice(data.paymentMethod),
+    billedTo: {
+      name: data.customerName,
+      email: data.customerEmail,
+      phone: data.phone,
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      zip: data.zip,
+    },
+    items,
+    subtotal: data.subtotal,
+    deliveryFee: data.deliveryFee,
+    total: data.total,
+    status,
+    payzyPlan,
+    notes: data.notes,
+  };
+}
 
 export type OrderEmailData = {
   orderNumber: string;
@@ -45,6 +114,7 @@ function paymentLabel(method: string): string {
     case "cod": return "Cash on Delivery";
     case "bank_deposit": return "Bank Deposit";
     case "payzy": return "Payzy (Buy Now, Pay Later)";
+    case "advance": return "Advanced Payment";
     default: return method;
   }
 }
@@ -420,11 +490,31 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<
     console.warn("[Email] GMAIL_USER / GMAIL_APP_PASSWORD not set, skipping email");
     return;
   }
+
+  let pdfBuffer: Buffer | null = null;
+  let pdfFileName = "Aroma-Notes-Invoice.pdf";
+  try {
+    const invoice = buildInvoiceFromOrderEmail(data);
+    pdfBuffer = await generateInvoicePdfBuffer(invoice);
+    pdfFileName = invoiceFileName(invoice);
+  } catch (err) {
+    console.error("[Email] Failed to build invoice PDF:", err);
+  }
+
   await transporter.sendMail({
     from: `"Aroma Notes" <${process.env.GMAIL_USER}>`,
     to: data.customerEmail,
     subject: `Order Confirmed - ${data.orderNumber} | Aroma Notes`,
     html: buildOrderConfirmationHtml(data),
+    attachments: pdfBuffer
+      ? [
+          {
+            filename: pdfFileName,
+            content: pdfBuffer,
+            contentType: "application/pdf",
+          },
+        ]
+      : undefined,
   });
   try {
     await sendNewOrderAdminEmail(data);

@@ -10,12 +10,14 @@ const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   cod: "Cash on Delivery",
   bank_deposit: "Bank Deposit",
   payzy: "PayZy",
+  advance: "Advanced Payment",
 };
 
 const PAYMENT_COLORS: Record<PaymentMethod, { bg: string; text: string; dot: string }> = {
   cod: { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-400" },
   bank_deposit: { bg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-400" },
   payzy: { bg: "bg-cyan-500/10", text: "text-cyan-400", dot: "bg-cyan-400" },
+  advance: { bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-400" },
 };
 
 export default function PaymentsPage() {

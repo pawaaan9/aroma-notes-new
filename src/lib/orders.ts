@@ -21,7 +21,7 @@ import { db } from "@/lib/firebase";
 
 export type OrderStatus = "pending" | "processing" | "confirmed" | "sent_to_courier" | "cancelled";
 
-export type PaymentMethod = "cod" | "bank_deposit" | "payzy";
+export type PaymentMethod = "cod" | "bank_deposit" | "payzy" | "advance";
 
 export type OrderItem = {
   productId: string;
@@ -44,6 +44,12 @@ export type Order = {
   paymentMethod: PaymentMethod;
   bankSlipUrl?: string;
   payzyPaymentStatus?: string;
+  /** For advance-payment orders: the upfront amount the customer paid. */
+  advanceAmount?: number;
+  /** For advance-payment orders: link back to the source advanced-invoice doc. */
+  advanceInvoiceId?: string;
+  /** For advance-payment orders: invoice number from advanced-invoices collection. */
+  advanceInvoiceNumber?: string;
   customer: {
     name: string;
     email: string;
@@ -109,6 +115,9 @@ function mapDocToOrder(id: string, data: Record<string, any>): Order {
     paymentMethod: data.paymentMethod ?? "cod",
     bankSlipUrl: data.bankSlipUrl ?? undefined,
     payzyPaymentStatus: data.payzyPaymentStatus ?? undefined,
+    ...(typeof data.advanceAmount === "number" ? { advanceAmount: Number(data.advanceAmount) } : {}),
+    ...(typeof data.advanceInvoiceId === "string" ? { advanceInvoiceId: data.advanceInvoiceId } : {}),
+    ...(typeof data.advanceInvoiceNumber === "string" ? { advanceInvoiceNumber: data.advanceInvoiceNumber } : {}),
     customer: {
       name: data.customer?.name ?? "",
       email: data.customer?.email ?? "",
@@ -157,6 +166,16 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     docData.payzyPaymentStatus = "awaiting";
   }
 
+  if (typeof input.advanceAmount === "number" && input.advanceAmount > 0) {
+    docData.advanceAmount = input.advanceAmount;
+  }
+  if (input.advanceInvoiceId) {
+    docData.advanceInvoiceId = input.advanceInvoiceId;
+  }
+  if (input.advanceInvoiceNumber) {
+    docData.advanceInvoiceNumber = input.advanceInvoiceNumber;
+  }
+
   const ref = await addDoc(collection(db, "orders"), docData);
   return {
     id: ref.id,
@@ -168,6 +187,9 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     status: "confirmed",
     paymentMethod: input.paymentMethod,
     bankSlipUrl: input.bankSlipUrl,
+    advanceAmount: input.advanceAmount,
+    advanceInvoiceId: input.advanceInvoiceId,
+    advanceInvoiceNumber: input.advanceInvoiceNumber,
     customer: input.customer,
     createdAt: new Date(),
     updatedAt: new Date(),
