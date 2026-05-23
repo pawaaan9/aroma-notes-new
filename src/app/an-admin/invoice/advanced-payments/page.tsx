@@ -149,6 +149,18 @@ export default function AdvancedPaymentsInvoicePage() {
   const [emailSending, setEmailSending] = useState(false);
   const [emailError, setEmailError] = useState("");
 
+  // Manual / custom item modal (for special-order items not in catalog).
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customForm, setCustomForm] = useState({
+    brand: "",
+    name: "",
+    size: "100 ml",
+    retailPrice: "",
+    quantity: "1",
+    note: "Special order · Imported on request",
+  });
+  const [customError, setCustomError] = useState("");
+
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>("");
   const [previewFileName, setPreviewFileName] = useState<string>("invoice.pdf");
@@ -199,16 +211,17 @@ export default function AdvancedPaymentsInvoicePage() {
   };
 
   useEffect(() => {
-    if (!previewUrl && !emailTarget && !pickerOpen) return;
+    if (!previewUrl && !emailTarget && !pickerOpen && !customOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       closePreview();
       setEmailTarget(null);
       setPickerOpen(false);
+      setCustomOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [previewUrl, emailTarget, pickerOpen]);
+  }, [previewUrl, emailTarget, pickerOpen, customOpen]);
 
   useEffect(() => {
     return () => {
@@ -243,6 +256,61 @@ export default function AdvancedPaymentsInvoicePage() {
   const updateItem = (key: string, patch: Partial<DraftItem>) =>
     setItems((arr) => arr.map((it) => (it.key === key ? { ...it, ...patch } : it)));
 
+  const resetCustomForm = () => {
+    setCustomForm({
+      brand: "",
+      name: "",
+      size: "100 ml",
+      retailPrice: "",
+      quantity: "1",
+      note: "Special order · Imported on request",
+    });
+    setCustomError("");
+  };
+
+  const openCustomModal = () => {
+    resetCustomForm();
+    setCustomOpen(true);
+  };
+
+  const submitCustomItem = () => {
+    const name = customForm.name.trim();
+    const size = customForm.size.trim();
+    const brand = customForm.brand.trim();
+    const note = customForm.note.trim();
+    const price = Math.max(0, Number(customForm.retailPrice) || 0);
+    const qty = Math.max(1, Number(customForm.quantity) || 1);
+
+    if (!name) {
+      setCustomError("Product name is required.");
+      return;
+    }
+    if (!size) {
+      setCustomError("Select a size.");
+      return;
+    }
+    if (price <= 0) {
+      setCustomError("Enter a unit price (greater than 0).");
+      return;
+    }
+
+    const sizeKey: CatalogSize = size === "10 ml" ? "10ml" : "100ml";
+    const item: DraftItem = {
+      key: newKey(),
+      productId: "",
+      brand,
+      name,
+      note,
+      size,
+      sizeKey,
+      quantity: qty,
+      retailPrice: price,
+    };
+    setItems((arr) => [...arr, item]);
+    setCustomOpen(false);
+    resetCustomForm();
+  };
+
   const addProductAsItem = (product: Product, sizeKey: CatalogSize) => {
     const variant = variantForSize(product, sizeKey);
     if (!variant) return;
@@ -276,9 +344,11 @@ export default function AdvancedPaymentsInvoicePage() {
       setError("Customer name is required.");
       return;
     }
-    const validItems = items.filter((it) => it.productId && it.name.trim() && it.quantity > 0);
+    const validItems = items.filter(
+      (it) => it.name.trim() && it.quantity > 0 && it.retailPrice > 0,
+    );
     if (validItems.length === 0) {
-      setError("Add at least one product from your catalog (10 ml or 100 ml).");
+      setError("Add at least one product — from your catalog or as a custom item.");
       return;
     }
     const missingAdvance = !advanceAmount || advanceAmount <= 0;
@@ -528,34 +598,47 @@ export default function AdvancedPaymentsInvoicePage() {
 
           {/* Items */}
           <section className="rounded-2xl border border-white/10 bg-gray-800/50 p-5">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-bold uppercase tracking-wider text-amber-300 font-saira">
                   Products
                 </h2>
                 <p className="mt-0.5 text-xs text-gray-400 font-saira">
-                  Choose from your catalog — 10 ml or 100 ml per line.
+                  Pick from your catalog, or add a custom item for special-order
+                  imports.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setPickerOpen(true)}
-                className="rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-gray-900 transition-colors hover:bg-amber-400 font-saira"
-              >
-                + Add product
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={openCustomModal}
+                  className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs font-bold text-amber-200 transition-colors hover:bg-amber-500/20 font-saira"
+                >
+                  + Custom item
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(true)}
+                  className="rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-gray-900 transition-colors hover:bg-amber-400 font-saira"
+                >
+                  + Add product
+                </button>
+              </div>
             </div>
 
             {items.length === 0 ? (
               <div className="mt-4 rounded-xl border border-dashed border-white/15 bg-gray-900/30 px-4 py-10 text-center">
                 <p className="text-sm text-gray-400 font-saira">No products added yet.</p>
                 <p className="mt-1 text-xs text-gray-500 font-saira">
-                  Click &ldquo;Add product&rdquo; to pick items from your store.
+                  Use &ldquo;Add product&rdquo; for catalog items, or &ldquo;Custom
+                  item&rdquo; for special-order imports.
                 </p>
               </div>
             ) : (
               <div className="mt-4 space-y-3">
-                {items.map((it, index) => (
+                {items.map((it, index) => {
+                  const isCustom = !it.productId;
+                  return (
                   <div
                     key={it.key}
                     className="rounded-xl border border-white/10 bg-gray-900/40 p-4"
@@ -567,9 +650,16 @@ export default function AdvancedPaymentsInvoicePage() {
                           {it.brand ? ` · ${it.brand}` : ""}
                         </p>
                         <p className="mt-0.5 text-sm font-bold text-white font-saira">{it.name}</p>
-                        <span className="mt-1 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-gray-200 font-saira">
-                          {it.size}
-                        </span>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-gray-200 font-saira">
+                            {it.size}
+                          </span>
+                          {isCustom ? (
+                            <span className="inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-300 font-saira">
+                              Custom
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                       <button
                         type="button"
@@ -644,11 +734,26 @@ export default function AdvancedPaymentsInvoicePage() {
                       </div>
                       <label className="block">
                         <span className="text-[10px] font-medium uppercase tracking-wide text-gray-500 font-saira">
-                          Retail price
+                          Unit price
                         </span>
-                        <div className="mt-1 rounded-lg border border-white/10 bg-gray-800/80 px-2.5 py-2 text-sm text-gray-300 font-saira">
-                          {formatLkr(it.retailPrice)}
-                        </div>
+                        {isCustom ? (
+                          <input
+                            type="number"
+                            min={0}
+                            value={it.retailPrice || ""}
+                            onChange={(e) =>
+                              updateItem(it.key, {
+                                retailPrice: Math.max(0, Number(e.target.value) || 0),
+                              })
+                            }
+                            placeholder="0"
+                            className="mt-1 w-full rounded-lg border border-amber-500/30 bg-gray-900/60 px-2.5 py-2 text-sm font-semibold text-amber-100 outline-none focus:border-amber-500/60 font-saira [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        ) : (
+                          <div className="mt-1 rounded-lg border border-white/10 bg-gray-800/80 px-2.5 py-2 text-sm text-gray-300 font-saira">
+                            {formatLkr(it.retailPrice)}
+                          </div>
+                        )}
                       </label>
                       <div className="flex flex-col justify-end">
                         <span className="text-[10px] font-medium uppercase tracking-wide text-gray-500 font-saira">
@@ -660,7 +765,8 @@ export default function AdvancedPaymentsInvoicePage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
@@ -1003,6 +1109,157 @@ export default function AdvancedPaymentsInvoicePage() {
             ) : (
               <iframe src={previewUrl ?? undefined} title="Invoice preview" className="flex-1 bg-white" />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Custom item modal */}
+      {customOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setCustomOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-gray-900 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-white/10 p-5">
+              <div>
+                <h3 className="text-base font-bold text-white font-saira">Add custom item</h3>
+                <p className="mt-1 text-xs text-gray-400 font-saira">
+                  For special-order imports or items that are not in your catalog. Enter the details
+                  manually.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCustomOpen(false)}
+                aria-label="Close"
+                className="rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid gap-3 p-5 sm:grid-cols-2">
+              <label className="block sm:col-span-2">
+                <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-400 font-saira">
+                  Product name *
+                </span>
+                <input
+                  type="text"
+                  value={customForm.name}
+                  onChange={(e) => setCustomForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="e.g. Bvlgari Le Gemme Tygar"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-amber-500/50 font-saira"
+                />
+              </label>
+
+              <label className="block">
+                <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-400 font-saira">
+                  Brand
+                </span>
+                <input
+                  type="text"
+                  value={customForm.brand}
+                  onChange={(e) => setCustomForm((f) => ({ ...f, brand: e.target.value }))}
+                  placeholder="e.g. Bvlgari"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-amber-500/50 font-saira"
+                />
+              </label>
+
+              <div className="block">
+                <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-400 font-saira">
+                  Size *
+                </span>
+                <div className="mt-1 grid grid-cols-3 gap-1.5">
+                  {(["10 ml", "50 ml", "100 ml"] as const).map((opt) => {
+                    const active = customForm.size === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setCustomForm((f) => ({ ...f, size: opt }))}
+                        className={`rounded-lg border px-2 py-2 text-xs font-bold uppercase transition-colors font-saira ${
+                          active
+                            ? "border-amber-500 bg-amber-500 text-gray-900"
+                            : "border-white/10 bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <label className="block">
+                <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-400 font-saira">
+                  Unit price (LKR) *
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  value={customForm.retailPrice}
+                  onChange={(e) => setCustomForm((f) => ({ ...f, retailPrice: e.target.value }))}
+                  placeholder="0"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-amber-500/50 font-saira [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </label>
+
+              <label className="block">
+                <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-400 font-saira">
+                  Quantity
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  value={customForm.quantity}
+                  onChange={(e) => setCustomForm((f) => ({ ...f, quantity: e.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-amber-500/50 font-saira [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </label>
+
+              <label className="block sm:col-span-2">
+                <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-400 font-saira">
+                  Note (optional)
+                </span>
+                <input
+                  type="text"
+                  value={customForm.note}
+                  onChange={(e) => setCustomForm((f) => ({ ...f, note: e.target.value }))}
+                  placeholder="Shown under the product name on the invoice"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-amber-500/50 font-saira"
+                />
+              </label>
+
+              {customError ? (
+                <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300 font-saira sm:col-span-2">
+                  {customError}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="flex gap-2 border-t border-white/10 bg-gray-900/60 px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setCustomOpen(false)}
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10 font-saira"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitCustomItem}
+                className="flex-1 rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-gray-900 transition-colors hover:bg-amber-400 font-saira"
+              >
+                Add item
+              </button>
+            </div>
           </div>
         </div>
       )}
