@@ -61,6 +61,9 @@ export default function ProductsPage() {
         id: d.id,
         ...d.data(),
       })) as FirestoreProduct[];
+      items.sort((a, b) =>
+        (a.name ?? "").localeCompare(b.name ?? "", "en", { sensitivity: "base" }),
+      );
       setProducts(items);
     } catch (err) {
       console.error("Failed to fetch products:", err);
@@ -86,14 +89,18 @@ export default function ProductsPage() {
     }
   };
 
-  const filtered = products.filter((p) => {
+  const filtered = products
+    .filter((p) => {
     const matchesTab = activeTab === "all" || p.perfumeType === activeTab;
     const matchesSearch =
       !search ||
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       (p.brand || "").toLowerCase().includes(search.toLowerCase());
     return matchesTab && matchesSearch;
-  });
+  })
+    .sort((a, b) =>
+      (a.name ?? "").localeCompare(b.name ?? "", "en", { sensitivity: "base" }),
+    );
 
   const getStockStatus = (p: FirestoreProduct) => {
     const variants = p.variants || [];

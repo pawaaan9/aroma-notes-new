@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins, Smooch_Sans, Saira, Exo_2, Audiowide } from "next/font/google";
 import SplashScreen from "@/components/SplashScreen";
 import CartDrawer from "@/components/CartDrawer";
+import MetaPixel from "@/components/MetaPixel";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 import { CartDrawerProvider } from "@/contexts/CartDrawerContext";
@@ -126,6 +127,7 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${smooch.variable} ${saira.variable} ${exo2.variable} ${audiowide.variable} bg-white font-sans text-gray-900 antialiased bg-perfume-gradient bg-perfume-paper bg-perfume-vignette`}
       >
+        <MetaPixel />
         {/* Floating sparkles layer */}
         <div className="perfume-sparkles" aria-hidden>
           <span className="dot" style={{ left: '10%', bottom: '5%' }} />

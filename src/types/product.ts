@@ -16,6 +16,7 @@ export type Product = {
   variants?: ProductVariant[];
   coverImageUrl?: string | null;
   descriptionText?: string | null;
+  createdAt?: Date;
   mainAccords?: {
     name?: string | null;
     percentage?: number | null;

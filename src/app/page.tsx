@@ -14,6 +14,10 @@ export default async function Home() {
     /* Firestore unavailable — sections hide gracefully */
   }
 
+  const recentProducts = [...allProducts].sort(
+    (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
+  );
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="absolute top-0 left-0 right-0 z-50">
@@ -115,7 +119,7 @@ export default async function Home() {
               <div className="w-32 h-1 bg-gradient-to-r from-amber-500 to-rose-500 mx-auto rounded-full mt-8 animate-fade-in-up delay-500" />
             </div>
 
-            <NewArrivals products={allProducts.slice(0, 4)} />
+            <NewArrivals products={recentProducts.slice(0, 4)} />
 
             <div className="text-center mt-16 animate-fade-in-up delay-700">
               <a
@@ -178,7 +182,7 @@ export default async function Home() {
             </div>
             
             {/* Featured Products from DB */}
-            <FeaturedProducts products={allProducts.slice(0, 8)} />
+            <FeaturedProducts products={recentProducts.slice(0, 8)} />
             
             {/* Call to Action */}
             <div className="text-center mt-16 sm:mt-20 animate-fade-in-up delay-700">

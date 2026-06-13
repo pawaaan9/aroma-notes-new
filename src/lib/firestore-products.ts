@@ -1,14 +1,24 @@
-import { collection, getDocs, query, orderBy, where, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, getDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Product } from "@/types/product";
 
+function toDate(v: unknown): Date | undefined {
+  if (v instanceof Timestamp) return v.toDate();
+  if (v instanceof Date) return v;
+  return undefined;
+}
+
+function compareProductName(a: Product, b: Product): number {
+  return (a.name ?? "").localeCompare(b.name ?? "", "en", { sensitivity: "base" });
+}
+
 /**
  * Fetch all products from Firestore and map to the Product type.
+ * Sorted A–Z by product name.
  */
 export async function fetchAllProducts(): Promise<Product[]> {
-  const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => {
+  const snapshot = await getDocs(collection(db, "products"));
+  const products = snapshot.docs.map((d) => {
     const data = d.data();
     return {
       _id: d.id,
@@ -27,8 +37,10 @@ export async function fetchAllProducts(): Promise<Product[]> {
         photoUrl: (v.photoUrl as string) ?? null,
       })),
       mainAccords: data.mainAccords ?? null,
+      createdAt: toDate(data.createdAt),
     } as Product;
   });
+  return products.sort(compareProductName);
 }
 
 /**
@@ -88,5 +100,6 @@ function mapDocToProduct(id: string, data: Record<string, unknown>): Product {
       photoUrl: (v.photoUrl as string) ?? null,
     })),
     mainAccords: (data.mainAccords as Product["mainAccords"]) ?? undefined,
+    createdAt: toDate(data.createdAt),
   };
 }
