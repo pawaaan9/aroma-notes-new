@@ -6,6 +6,7 @@ import VariantSelector from "./VariantSelector";
 import MainAccordsChart from "./MainAccordsChart";
 import { useCart } from "@/contexts/CartContext";
 import { useCartDrawer } from "@/contexts/CartDrawerContext";
+import { trackAddToCart } from "@/lib/meta-pixel-events";
 
 const BLUR_DATA_URL =
   "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Crect fill='%23e5e7eb' width='4' height='5'/%3E%3C/svg%3E";
@@ -97,6 +98,12 @@ export default function ProductDetail({ product }: Props) {
                 const originalPrice = v ? (v.price ?? null) : null;
                 const itemId = v?.size ? `${product._id}:${v.size}` : product._id;
                 addItem({ id: itemId, name: product.name, imageUrl: imageSrc, brand: product.brand ?? null, size: v?.size ?? null, price, originalPrice }, 1);
+                trackAddToCart({
+                  id: itemId,
+                  name: product.name,
+                  price,
+                  quantity: 1,
+                });
               } catch {}
               // fly-to-cart animation
               const srcEl = document.getElementById("product-image");

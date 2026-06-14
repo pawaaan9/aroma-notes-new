@@ -10,6 +10,7 @@ import { formatLkr } from "@/utils/currency";
 import { doc, updateDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { upsertCustomerFromOrder } from "@/lib/customers";
+import { trackPurchase } from "@/lib/meta-pixel-events";
 
 type VerifyResult = {
   status: "loading" | "success" | "failed" | "error";
@@ -91,6 +92,19 @@ function PayzyResponseContent() {
           orderNumber: orderNum,
           total: orderData?.total,
         });
+
+        const orderItems = (orderData?.items ?? []).map((it: Record<string, unknown>) => ({
+          id: String(it.productId ?? ""),
+          name: String(it.name ?? ""),
+          quantity: Number(it.quantity) || 1,
+          price: Number(it.price) || 0,
+        }));
+        trackPurchase(
+          orderItems,
+          Number(orderData?.total) || 0,
+          orderNum,
+        );
+
         clear();
         sessionStorage.removeItem("payzyData");
 

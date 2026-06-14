@@ -8,6 +8,7 @@ import ProductDetail from "../ProductDetail";
 import ProductCard from "@/components/ProductCard";
 import { fetchProductByIdOrSlug, fetchRelatedProducts } from "@/lib/firestore-products";
 import { formatLkr } from "@/utils/currency";
+import { trackViewContent } from "@/lib/meta-pixel-events";
 import type { Product } from "@/types/product";
 
 export default function ProductViewPage() {
@@ -23,8 +24,16 @@ export default function ProductViewPage() {
     fetchProductByIdOrSlug(id)
       .then((p) => {
         setProduct(p);
-        if (p) fetchRelatedProducts(p, 6).then(setRelatedProducts);
-        else setRelatedProducts([]);
+        if (p) {
+          const prices = (p.variants ?? [])
+            .map((v) => v.discountPrice ?? v.price ?? null)
+            .filter((pr): pr is number => pr != null);
+          const price = prices.length > 0 ? Math.min(...prices) : 0;
+          trackViewContent({ id: p._id, name: p.name, price });
+          fetchRelatedProducts(p, 6).then(setRelatedProducts);
+        } else {
+          setRelatedProducts([]);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));

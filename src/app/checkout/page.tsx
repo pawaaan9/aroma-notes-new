@@ -10,6 +10,7 @@ import { formatLkr } from "@/utils/currency";
 import { createOrder, type OrderItem, type PaymentMethod } from "@/lib/orders";
 import { loadSettings, fetchSettings } from "@/lib/settings";
 import { upsertCustomerFromOrder } from "@/lib/customers";
+import { trackInitiateCheckout, trackPurchase } from "@/lib/meta-pixel-events";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import payzyLogo from "@/assets/payzy logo.jpg";
@@ -105,6 +106,7 @@ export default function CheckoutPage() {
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
   const [slipError, setSlipError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const checkoutTrackedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState<{
     orderNumber: string;
@@ -117,6 +119,20 @@ export default function CheckoutPage() {
   const effectiveSubtotal = paymentMethod === "payzy" ? originalTotal : total;
   const deliveryFee = effectiveSubtotal > 0 ? DELIVERY_FEE : 0;
   const grandTotal = effectiveSubtotal + deliveryFee;
+
+  useEffect(() => {
+    if (!settingsReady || items.length === 0 || checkoutTrackedRef.current) return;
+    checkoutTrackedRef.current = true;
+    trackInitiateCheckout(
+      items.map((it) => ({
+        id: it.id,
+        name: it.name,
+        quantity: it.quantity,
+        price: it.price,
+      })),
+      grandTotal,
+    );
+  }, [settingsReady, items, grandTotal]);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -364,6 +380,16 @@ export default function CheckoutPage() {
       }
 
       setOrderPlaced({ orderNumber: order.orderNumber, total: finalTotal, paymentMethod });
+      trackPurchase(
+        items.map((it) => ({
+          id: it.id,
+          name: it.name,
+          quantity: it.quantity,
+          price: it.price ?? 0,
+        })),
+        finalTotal,
+        order.orderNumber,
+      );
       clear();
       localStorage.removeItem("aroma-notes:checkout-form");
 

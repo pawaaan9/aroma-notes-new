@@ -8,11 +8,7 @@ export const META_PIXEL_ID = "979031708238527";
 
 declare global {
   interface Window {
-    fbq?: (
-      action: string,
-      eventName: string,
-      params?: Record<string, unknown>,
-    ) => void;
+    fbq?: (...args: unknown[]) => void;
   }
 }
 
