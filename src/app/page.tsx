@@ -2,17 +2,28 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import FeaturedProducts from "./FeaturedProducts";
 import NewArrivals from "./NewArrivals";
+import BestSellers from "./BestSellers";
 import { getCachedProducts } from "@/lib/products-cache";
+import { getCachedBestSellerIds } from "@/lib/best-sellers-cache";
 
 export const revalidate = 120;
 
 export default async function Home() {
   let allProducts: Awaited<ReturnType<typeof getCachedProducts>> = [];
+  let bestSellerIds: string[] = [];
   try {
-    allProducts = await getCachedProducts();
+    [allProducts, bestSellerIds] = await Promise.all([
+      getCachedProducts(),
+      getCachedBestSellerIds().catch(() => []),
+    ]);
   } catch {
-    /* Firestore unavailable — sections hide gracefully */
+    /* Firestore unavailable: sections hide gracefully */
   }
+
+  const productsById = new Map(allProducts.map((p) => [p._id, p]));
+  const bestSellers = bestSellerIds
+    .map((id) => productsById.get(id))
+    .filter((p): p is (typeof allProducts)[number] => p !== undefined);
 
   const recentProducts = [...allProducts].sort(
     (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
@@ -99,6 +110,72 @@ export default async function Home() {
           </div>
         </section>
         
+        {/* Best Sellers Section */}
+        {bestSellers.length > 0 && (
+          <section className="relative overflow-hidden bg-[#0a0a0f] py-20 sm:py-28">
+            {/* Creative background layers */}
+            <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+              {/* Aurora sweep */}
+              <div className="absolute -top-1/3 left-1/2 h-[900px] w-[1400px] -translate-x-1/2 rounded-full bg-[conic-gradient(from_180deg_at_50%_50%,rgba(245,158,11,0.18),rgba(244,63,94,0.14),rgba(168,85,247,0.10),rgba(245,158,11,0.18))] blur-[130px] opacity-70" />
+              {/* Fine grid */}
+              <div
+                className="absolute inset-0 opacity-[0.13]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(rgba(255,255,255,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.35) 1px, transparent 1px)",
+                  backgroundSize: "64px 64px",
+                  maskImage: "radial-gradient(ellipse 75% 60% at 50% 40%, #000 30%, transparent 75%)",
+                  WebkitMaskImage: "radial-gradient(ellipse 75% 60% at 50% 40%, #000 30%, transparent 75%)",
+                }}
+              />
+              {/* Diagonal silk streaks */}
+              <div
+                className="absolute inset-0 opacity-[0.07]"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(115deg, rgba(255,255,255,0.9) 0px, rgba(255,255,255,0.9) 1px, transparent 1px, transparent 26px)",
+                  maskImage: "linear-gradient(to bottom, transparent, #000 35%, #000 65%, transparent)",
+                  WebkitMaskImage: "linear-gradient(to bottom, transparent, #000 35%, #000 65%, transparent)",
+                }}
+              />
+              {/* Corner glows */}
+              <div className="absolute -left-24 top-1/3 h-72 w-72 rounded-full bg-amber-500/20 blur-[110px]" />
+              <div className="absolute -right-24 bottom-1/4 h-80 w-80 rounded-full bg-rose-500/20 blur-[120px]" />
+              {/* Edge fades so it blends with neighbouring sections */}
+              <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-gray-950 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-gray-950 to-transparent" />
+              {/* Hairline accents */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-rose-400/30 to-transparent" />
+            </div>
+
+            <div className="relative z-10 mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw]">
+              <div className="mb-16 text-center">
+                <div className="mb-6 inline-flex animate-fade-in-up items-center gap-2 rounded-full border border-amber-400/30 bg-white/5 px-6 py-3 backdrop-blur-sm">
+                  <svg className="h-3.5 w-3.5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.48 3.5l2.4 4.87 5.37.78-3.89 3.79.92 5.35-4.8-2.52-4.8 2.52.92-5.35-3.89-3.79 5.37-.78 2.4-4.87z" />
+                  </svg>
+                  <span className="font-saira text-sm font-medium uppercase tracking-wider text-amber-400">
+                    Customer Favourites
+                  </span>
+                </div>
+                <h2 className="mb-6 animate-fade-in-up font-smooch text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                  Best{" "}
+                  <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-rose-400 bg-clip-text text-transparent">
+                    Sellers
+                  </span>
+                </h2>
+                <p className="mx-auto max-w-3xl animate-fade-in-up font-saira text-lg leading-relaxed text-gray-400 delay-300">
+                  The scents our customers keep coming back for, ranked by what&apos;s flying off the shelves.
+                </p>
+                <div className="mx-auto mt-8 h-1 w-32 animate-fade-in-up rounded-full bg-gradient-to-r from-amber-500 to-rose-500 delay-500" />
+              </div>
+
+              <BestSellers products={bestSellers} />
+            </div>
+          </section>
+        )}
+
         {/* New Arrivals Section */}
         <section className="py-20 sm:py-28 bg-gray-950 relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">

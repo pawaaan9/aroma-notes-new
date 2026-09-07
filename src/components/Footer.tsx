@@ -47,7 +47,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="text-center">
-          <p className="mt-6 text-sm text-gray-500 font-saira uppercase">© 2025 Aroma Notes. All rights reserved.</p>
+          <p className="mt-6 text-sm text-gray-500 font-saira uppercase">© 2026 Aroma Notes. All rights reserved.</p>
           <div className="mt-2 flex justify-center space-x-4">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
             <div className="w-2 h-2 bg-primary/60 rounded-full animate-pulse delay-300"></div>

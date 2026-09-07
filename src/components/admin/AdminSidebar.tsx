@@ -64,6 +64,15 @@ const navItemsTop: NavItem[] = [
     ),
   },
   {
+    label: "Best Sellers",
+    href: "/an-admin/best-sellers",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.5l2.4 4.87 5.37.78-3.89 3.79.92 5.35-4.8-2.52-4.8 2.52.92-5.35-3.89-3.79 5.37-.78 2.4-4.87z" />
+      </svg>
+    ),
+  },
+  {
     label: "Orders",
     href: "/an-admin/orders",
     icon: (
