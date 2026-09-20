@@ -134,13 +134,15 @@ function ComboCard({ combo }: { combo: ResolvedCombo }) {
               {combo.items.map((item, i) => (
                 <li
                   key={`row-${item.product._id}-${i}`}
-                  className="flex items-baseline justify-between gap-3 font-saira text-xs"
+                  className="flex items-baseline gap-2 font-saira text-xs"
                 >
+                  <svg className="mt-0.5 h-3 w-3 shrink-0 text-amber-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
                   <span className="min-w-0 flex-1 truncate text-gray-300">
                     {item.product.name}
                     <span className="text-gray-500"> · {item.size ?? "Standard"}</span>
                   </span>
-                  <span className="shrink-0 text-gray-500">{formatLkr(item.unitPrice)}</span>
                 </li>
               ))}
             </ul>
