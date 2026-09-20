@@ -9,9 +9,12 @@ import { useCart } from "@/contexts/CartContext";
 import { formatLkr } from "@/utils/currency";
 import { loadSettings } from "@/lib/settings";
 import { safeImageUrl } from "@/utils/image";
+import { groupCartItems } from "@/utils/cart-groups";
+import ComboCartCard from "@/components/ComboCartCard";
 
 export default function CartPage() {
-  const { items, count, total, updateQuantity, removeItem, clear } = useCart();
+  const { items, count, total, updateQuantity, removeItem, updateComboQuantity, removeCombo, hasFreeDelivery, clear } = useCart();
+  const groups = groupCartItems(items);
   const [deliveryFeeConfig, setDeliveryFeeConfig] = useState<number | null>(null);
 
   useEffect(() => {
@@ -21,7 +24,7 @@ export default function CartPage() {
 
   const settingsReady = deliveryFeeConfig !== null;
   const DELIVERY_FEE = deliveryFeeConfig ?? 0;
-  const deliveryFee = total > 0 ? DELIVERY_FEE : 0;
+  const deliveryFee = total > 0 && !hasFreeDelivery ? DELIVERY_FEE : 0;
   const grandTotal = total + deliveryFee;
 
   return (
@@ -67,9 +70,21 @@ export default function CartPage() {
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               {/* Cart items */}
               <div className="lg:col-span-2 space-y-4">
-                {items.map((item) => (
+                {groups.map((group) => {
+                  if (group.kind === "combo") {
+                    return (
+                      <ComboCartCard
+                        key={group.key}
+                        group={group}
+                        onQuantity={updateComboQuantity}
+                        onRemove={removeCombo}
+                      />
+                    );
+                  }
+                  const item = group.item;
+                  return (
                   <div
-                    key={item.id}
+                    key={group.key}
                     className="flex gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
                   >
                     {/* Product image */}
@@ -145,7 +160,8 @@ export default function CartPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                );
+                })}
 
                 {/* Clear cart */}
                 <button
@@ -167,8 +183,12 @@ export default function CartPage() {
                     </div>
                     <div className="flex justify-between text-sm font-saira">
                       <span className="text-gray-600">Delivery</span>
-                      {settingsReady ? (
-                        <span className="font-medium text-gray-900">{formatLkr(deliveryFee)}</span>
+                      {settingsReady || hasFreeDelivery ? (
+                        hasFreeDelivery ? (
+                          <span className="font-semibold text-emerald-600">FREE</span>
+                        ) : (
+                          <span className="font-medium text-gray-900">{formatLkr(deliveryFee)}</span>
+                        )
                       ) : (
                         <span className="inline-block h-4 w-16 animate-pulse rounded bg-gray-200" />
                       )}

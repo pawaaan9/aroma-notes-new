@@ -73,6 +73,15 @@ const navItemsTop: NavItem[] = [
     ),
   },
   {
+    label: "Combo Offers",
+    href: "/an-admin/combo-offers",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18.75a.375.375 0 00.375-.375V9.375a.375.375 0 00-.375-.375H3.375A.375.375 0 003 9.375v1.5c0 .207.168.375.375.375z" />
+      </svg>
+    ),
+  },
+  {
     label: "Orders",
     href: "/an-admin/orders",
     icon: (

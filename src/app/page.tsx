@@ -5,22 +5,30 @@ import NewArrivals from "./NewArrivals";
 import BestSellers from "./BestSellers";
 import { getCachedProducts } from "@/lib/products-cache";
 import { getCachedBestSellerIds } from "@/lib/best-sellers-cache";
+import ComboOffers from "./ComboOffers";
+import { getCachedComboOffers } from "@/lib/combo-offers-cache";
+import { resolveCombo, type ResolvedCombo } from "@/lib/combo-offers";
 
 export const revalidate = 120;
 
 export default async function Home() {
   let allProducts: Awaited<ReturnType<typeof getCachedProducts>> = [];
   let bestSellerIds: string[] = [];
+  let comboOffers: Awaited<ReturnType<typeof getCachedComboOffers>> = [];
   try {
-    [allProducts, bestSellerIds] = await Promise.all([
+    [allProducts, bestSellerIds, comboOffers] = await Promise.all([
       getCachedProducts(),
       getCachedBestSellerIds().catch(() => []),
+      getCachedComboOffers().catch(() => []),
     ]);
   } catch {
     /* Firestore unavailable: sections hide gracefully */
   }
 
   const productsById = new Map(allProducts.map((p) => [p._id, p]));
+  const combos = comboOffers
+    .map((offer) => resolveCombo(offer, productsById))
+    .filter((c): c is ResolvedCombo => c !== null);
   const bestSellers = bestSellerIds
     .map((id) => productsById.get(id))
     .filter((p): p is (typeof allProducts)[number] => p !== undefined);
@@ -208,6 +216,75 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* Combo Offers Section */}
+        {combos.length > 0 && (
+          <section className="relative overflow-hidden bg-[#08080c] py-20 sm:py-28">
+            {/* Creative backdrop */}
+            <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+              {/* Overhead spotlight */}
+              <div className="absolute -top-40 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.22),transparent_65%)] blur-2xl" />
+              {/* Crossing ribbons */}
+              <div className="absolute -left-1/4 top-1/3 h-40 w-[150%] -rotate-6 bg-gradient-to-r from-transparent via-rose-500/[0.07] to-transparent blur-2xl" />
+              <div className="absolute -left-1/4 top-1/2 h-32 w-[150%] rotate-3 bg-gradient-to-r from-transparent via-amber-500/[0.07] to-transparent blur-2xl" />
+              {/* Dot field */}
+              <div
+                className="absolute inset-0 opacity-[0.18]"
+                style={{
+                  backgroundImage: "radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)",
+                  backgroundSize: "26px 26px",
+                  maskImage: "radial-gradient(ellipse 70% 55% at 50% 45%, #000 20%, transparent 78%)",
+                  WebkitMaskImage: "radial-gradient(ellipse 70% 55% at 50% 45%, #000 20%, transparent 78%)",
+                }}
+              />
+              <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-gray-950 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-gray-950 to-transparent" />
+            </div>
+
+            {/* Ticker strip */}
+            <div className="relative mb-14 flex overflow-hidden border-y border-white/10 bg-white/[0.03] py-3 select-none">
+              <div className="animate-combo-marquee flex shrink-0 items-center gap-8 pr-8">
+                {Array.from({ length: 2 }).map((_, loop) => (
+                  <div key={loop} className="flex shrink-0 items-center gap-8">
+                    {["Buy Together", "Pay Less", "Layer Like A Pro", "Curated Pairings", "Limited Bundles"].map((word, i) => (
+                      <span key={`${loop}-${i}`} className="flex shrink-0 items-center gap-8">
+                        <span className="font-saira text-xs font-semibold uppercase tracking-[0.35em] text-amber-400/70">
+                          {word}
+                        </span>
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-rose-400/50" />
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative z-10 mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw]">
+              <div className="mb-16 text-center">
+                <div className="mb-6 inline-flex animate-fade-in-up items-center gap-2 rounded-full border border-amber-400/30 bg-white/5 px-6 py-3 backdrop-blur-sm">
+                  <svg className="h-3.5 w-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21" />
+                  </svg>
+                  <span className="font-saira text-sm font-medium uppercase tracking-wider text-amber-400">
+                    Layering Combos
+                  </span>
+                </div>
+                <h2 className="mb-6 animate-fade-in-up font-smooch text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                  Better{" "}
+                  <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-rose-400 bg-clip-text text-transparent">
+                    Together
+                  </span>
+                </h2>
+                <p className="mx-auto max-w-3xl animate-fade-in-up font-saira text-lg leading-relaxed text-gray-400 delay-300">
+                  Hand picked pairings at one bundle price. Same vibe, now yours.
+                </p>
+                <div className="mx-auto mt-8 h-1 w-32 animate-fade-in-up rounded-full bg-gradient-to-r from-amber-500 to-rose-500 delay-500" />
+              </div>
+
+              <ComboOffers combos={combos} />
+            </div>
+          </section>
+        )}
 
         {/* Cinematic Video Section */}
         <section className="relative w-full h-[60vh] sm:h-[70vh] overflow-hidden">

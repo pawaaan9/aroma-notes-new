@@ -9,10 +9,11 @@ import { fetchAllProducts } from "@/lib/firestore-products";
 import { formatLkr } from "@/utils/currency";
 import type { Product } from "@/types/product";
 import { safeImageUrl } from "@/utils/image";
+import { groupCartItems } from "@/utils/cart-groups";
 
 export default function CartDrawer() {
   const { isOpen, close } = useCartDrawer();
-  const { items, count, total, removeItem, clear } = useCart();
+  const { items, count, total, removeItem, removeCombo, clear } = useCart();
   const [suggestions, setSuggestions] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -102,9 +103,83 @@ export default function CartDrawer() {
             </div>
           ) : (
             <div className="p-4 space-y-4">
-              {items.map((it) => (
+              {groupCartItems(items).map((group) => {
+                if (group.kind === "combo") {
+                  const savings = Math.max(0, group.setOriginalPrice - group.setPrice);
+                  return (
+                    <div
+                      key={group.key}
+                      className="rounded-lg border-2 border-amber-300 bg-amber-50/50 p-3"
+                    >
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="shrink-0 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                            Combo
+                          </span>
+                          <p className="truncate text-xs font-semibold text-gray-900">
+                            {group.comboName}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => removeCombo(group.comboId)}
+                          className="shrink-0 rounded p-1 text-gray-400 transition-colors hover:text-rose-600"
+                          aria-label="Remove combo"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {group.items.map((it) => (
+                          <div key={it.id} className="flex items-center gap-2">
+                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                              {it.imageUrl ? (
+                                <Image
+                                  src={safeImageUrl(it.imageUrl)}
+                                  alt={it.name}
+                                  width={40}
+                                  height={40}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="h-full w-full bg-gray-200" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-xs font-medium text-gray-900">{it.name}</p>
+                              <p className="truncate text-[11px] text-gray-500">
+                                {it.size ?? ""}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-2 flex items-baseline justify-between border-t border-amber-200 pt-2">
+                        <span className="text-[11px] text-gray-600">
+                          {group.quantity} {group.quantity > 1 ? "sets" : "set"}
+                        </span>
+                        <div className="flex items-baseline gap-1.5">
+                          {savings > 0 && (
+                            <span className="text-[11px] text-gray-400 line-through">
+                              {formatLkr(group.setOriginalPrice * group.quantity)}
+                            </span>
+                          )}
+                          <span className="text-xs font-bold text-gray-900">
+                            {formatLkr(group.setPrice * group.quantity)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                const it = group.item;
+                return (
                 <div
-                  key={it.id}
+                  key={group.key}
                   className="flex gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100"
                 >
                   <div className="h-14 w-14 rounded-lg overflow-hidden bg-white shrink-0 border border-gray-200">
@@ -141,7 +216,8 @@ export default function CartDrawer() {
                     </svg>
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

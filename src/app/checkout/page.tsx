@@ -84,7 +84,7 @@ function normalizeSavedCheckoutForm(raw: unknown): FormData {
 }
 
 export default function CheckoutPage() {
-  const { items, total, originalTotal, clear } = useCart();
+  const { items, total, originalTotal, hasFreeDelivery, clear } = useCart();
   const [deliveryFeeConfig, setDeliveryFeeConfig] = useState<number | null>(null);
 
   // Load delivery fee: instant fetch + real-time sync + timeout fallback
@@ -118,7 +118,7 @@ export default function CheckoutPage() {
   const settingsReady = deliveryFeeConfig !== null;
   const DELIVERY_FEE = deliveryFeeConfig ?? 0;
   const effectiveSubtotal = paymentMethod === "payzy" ? originalTotal : total;
-  const deliveryFee = effectiveSubtotal > 0 ? DELIVERY_FEE : 0;
+  const deliveryFee = effectiveSubtotal > 0 && !hasFreeDelivery ? DELIVERY_FEE : 0;
   const grandTotal = effectiveSubtotal + deliveryFee;
 
   useEffect(() => {
@@ -287,10 +287,11 @@ export default function CheckoutPage() {
       let finalDeliveryFee = deliveryFee;
       try {
         const freshSettings = await fetchSettings();
-        finalDeliveryFee = effectiveSubtotal > 0 ? freshSettings.deliveryFee : 0;
+        finalDeliveryFee =
+          effectiveSubtotal > 0 && !hasFreeDelivery ? freshSettings.deliveryFee : 0;
         setDeliveryFeeConfig(freshSettings.deliveryFee);
       } catch {
-        if (deliveryFeeConfig === null) {
+        if (deliveryFeeConfig === null && !hasFreeDelivery) {
           alert("Unable to load delivery charges. Please check your connection and try again.");
           setSubmitting(false);
           return;
@@ -1123,8 +1124,12 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-sm font-saira">
                       <span className="text-gray-600">Delivery</span>
-                      {settingsReady ? (
-                        <span className="font-medium text-gray-900">{formatLkr(deliveryFee)}</span>
+                      {settingsReady || hasFreeDelivery ? (
+                        hasFreeDelivery ? (
+                          <span className="font-semibold text-emerald-600">FREE</span>
+                        ) : (
+                          <span className="font-medium text-gray-900">{formatLkr(deliveryFee)}</span>
+                        )
                       ) : (
                         <span className="inline-block h-4 w-16 animate-pulse rounded bg-gray-200" />
                       )}
@@ -1132,7 +1137,7 @@ export default function CheckoutPage() {
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between font-saira">
                         <span className="font-semibold text-gray-900">Total</span>
-                        {settingsReady ? (
+                        {settingsReady || hasFreeDelivery ? (
                           <span className="text-lg font-bold text-primary">
                             {formatLkr(grandTotal)}
                           </span>

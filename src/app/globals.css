@@ -980,3 +980,17 @@ label.font-saira {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+/* Combo offers ticker strip */
+@keyframes combo-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-combo-marquee {
+  animation: combo-marquee 28s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-combo-marquee { animation: none; }
+}
