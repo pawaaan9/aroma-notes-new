@@ -14,6 +14,7 @@ import { trackInitiateCheckout, trackPurchase } from "@/lib/meta-pixel-events";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import payzyLogo from "@/assets/payzy logo.jpg";
+import { safeImageUrl } from "@/utils/image";
 
 type FormData = {
   firstName: string;
@@ -1085,7 +1086,7 @@ export default function CheckoutPage() {
                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
                           {item.imageUrl ? (
                             <Image
-                              src={item.imageUrl}
+                              src={safeImageUrl(item.imageUrl)}
                               alt={item.name}
                               fill
                               className="object-cover"

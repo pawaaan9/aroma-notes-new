@@ -12,6 +12,7 @@ import {
 } from "@/lib/orders";
 import { formatLkr } from "@/utils/currency";
 import payzyLogo from "@/assets/payzy logo.jpg";
+import { safeImageUrl } from "@/utils/image";
 
 type Tab = "all" | OrderStatus;
 
@@ -366,7 +367,7 @@ function OrderDetailModal({
                   <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gray-600 border border-gray-500">
                     {item.imageUrl ? (
                       <Image
-                        src={item.imageUrl}
+                        src={safeImageUrl(item.imageUrl)}
                         alt={item.name}
                         fill
                         className="object-cover"
@@ -820,7 +821,7 @@ export default function OrdersPage() {
                             {order.items.slice(0, 3).map((item, i) => (
                               <div key={i} className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-gray-800 bg-gray-700">
                                 {item.imageUrl ? (
-                                  <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="32px" />
+                                  <Image src={safeImageUrl(item.imageUrl)} alt={item.name} fill className="object-cover" sizes="32px" />
                                 ) : (
                                   <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">{item.name[0]}</div>
                                 )}

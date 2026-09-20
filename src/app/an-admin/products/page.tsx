@@ -42,6 +42,8 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<FirestoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<FirestoreProduct | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -76,14 +78,28 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
-  const handleDelete = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+  useEffect(() => {
+    if (!deleteTarget) return;
+    setDeleteError(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !deleting) setDeleteTarget(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [deleteTarget, deleting]);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const productId = deleteTarget.id;
     setDeleting(productId);
     try {
       await deleteDoc(doc(db, "products", productId));
       setProducts((prev) => prev.filter((p) => p.id !== productId));
+      setDeleteTarget(null);
+      if (previewProduct?.id === productId) setPreviewProduct(null);
     } catch (err) {
       console.error("Failed to delete:", err);
+      setDeleteError("Could not delete this product. Please try again.");
     } finally {
       setDeleting(null);
     }
@@ -316,7 +332,7 @@ export default function ProductsPage() {
                             <button onClick={() => router.push(`/an-admin/products/edit/${product.id}`)} className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white" title="Edit">
                               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             </button>
-                            <button onClick={() => handleDelete(product.id)} disabled={deleting === product.id} className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50" title="Delete">
+                            <button onClick={() => setDeleteTarget(product)} disabled={deleting === product.id} className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50" title="Delete">
                               {deleting === product.id ? (
                                 <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
                               ) : (
@@ -374,7 +390,7 @@ export default function ProductsPage() {
                         <button onClick={() => router.push(`/an-admin/products/edit/${product.id}`)} className="rounded-lg p-1.5 text-gray-400 hover:bg-white/10 hover:text-white" title="Edit">
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                         </button>
-                        <button onClick={() => handleDelete(product.id)} disabled={deleting === product.id} className="rounded-lg p-1.5 text-gray-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50">
+                        <button onClick={() => setDeleteTarget(product)} disabled={deleting === product.id} className="rounded-lg p-1.5 text-gray-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50">
                           {deleting === product.id ? (
                             <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
                           ) : (
@@ -576,6 +592,89 @@ export default function ProductsPage() {
                   <span className="text-gray-300">{(previewProduct.variants || []).length}</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => { if (!deleting) setDeleteTarget(null); }}
+          />
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-product-title"
+            className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-gray-900 p-6 shadow-2xl animate-fade-in-up"
+          >
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10">
+              <svg className="h-7 w-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+
+            <h3 id="delete-product-title" className="text-center text-lg font-bold text-white font-saira">
+              Delete Product
+            </h3>
+            <p className="mt-2 text-center text-sm text-gray-400 font-saira">
+              This permanently removes the product from your catalog and storefront. It cannot be undone.
+            </p>
+
+            {/* Product being deleted */}
+            <div className="mt-5 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gray-800">
+                {deleteTarget.coverImageUrl && (
+                  <Image
+                    src={deleteTarget.coverImageUrl}
+                    alt={deleteTarget.name}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-white font-saira">{deleteTarget.name}</p>
+                <p className="truncate text-xs text-gray-400 font-saira">
+                  {deleteTarget.brand || "No brand"} · {(deleteTarget.variants || []).length} variants
+                </p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <p className="mt-4 rounded-xl bg-red-500/10 px-4 py-2.5 text-center text-xs text-red-400 font-saira">
+                {deleteError}
+              </p>
+            )}
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={!!deleting}
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-gray-300 transition-all hover:bg-white/10 hover:text-white disabled:opacity-50 font-saira"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={!!deleting}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white transition-all hover:bg-red-600 disabled:opacity-60 font-saira"
+              >
+                {deleting ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </button>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { formatLkr } from "@/utils/currency";
 import { loadSettings } from "@/lib/settings";
+import { safeImageUrl } from "@/utils/image";
 
 export default function CartPage() {
   const { items, count, total, updateQuantity, removeItem, clear } = useCart();
@@ -75,7 +76,7 @@ export default function CartPage() {
                     <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
                       {item.imageUrl ? (
                         <Image
-                          src={item.imageUrl}
+                          src={safeImageUrl(item.imageUrl)}
                           alt={item.name}
                           fill
                           className="object-cover"

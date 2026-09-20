@@ -8,6 +8,7 @@ import { useCartDrawer } from "@/contexts/CartDrawerContext";
 import { fetchAllProducts } from "@/lib/firestore-products";
 import { formatLkr } from "@/utils/currency";
 import type { Product } from "@/types/product";
+import { safeImageUrl } from "@/utils/image";
 
 export default function CartDrawer() {
   const { isOpen, close } = useCartDrawer();
@@ -109,7 +110,7 @@ export default function CartDrawer() {
                   <div className="h-14 w-14 rounded-lg overflow-hidden bg-white shrink-0 border border-gray-200">
                     {it.imageUrl ? (
                       <Image
-                        src={it.imageUrl}
+                        src={safeImageUrl(it.imageUrl)}
                         alt={it.name}
                         width={56}
                         height={56}
