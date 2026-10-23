@@ -11,6 +11,15 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Keeps the admin on its own fonts while the storefront uses Mulish.
+  return (
+    <div className="admin-fonts">
+      <AdminShell>{children}</AdminShell>
+    </div>
+  );
+}
+
+function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);

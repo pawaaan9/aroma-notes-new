@@ -26,40 +26,41 @@ export default function TermsPage() {
         <Header />
       </div>
 
-      <main className="flex-grow animate-fade-in-up">
+      <main className="flex-grow bg-white">
         <section>
           <HeroVideo
+            eyebrow="Policies"
             title="Terms & Conditions"
             subtitle="Please review the terms that govern your use of Aroma Notes."
           />
         </section>
 
-        <section className="py-16 sm:py-24 bg-white">
-          <div className="mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw] prose prose-gray max-w-4xl">
-            <h2 className="font-smooch text-3xl sm:text-4xl text-gray-900 mb-6">Agreement to Terms</h2>
-            <p className="font-saira text-gray-700">
+        <section className="bg-white px-4 py-16 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-3xl border border-gray-200 px-6 py-10 sm:px-12 sm:py-14">
+            <h2 className="mb-5 text-2xl font-extrabold uppercase tracking-[0.06em] text-gray-900">Agreement to Terms</h2>
+            <p className="leading-relaxed text-gray-600">
               By accessing or using Aroma Notes, you agree to be bound by these Terms & Conditions. If you do not agree, please do not use our site or services.
             </p>
 
-            <h3 className="font-smooch text-2xl text-gray-900 mt-10 mb-4">Orders & Payments</h3>
-            <ul className="list-disc pl-6 font-saira text-gray-700 space-y-2">
+            <h3 className="mt-10 mb-4 border-t border-gray-200 pt-8 text-lg font-bold text-gray-900">Orders & Payments</h3>
+            <ul className="list-disc space-y-2 pl-6 leading-relaxed text-gray-600 marker:text-primary">
               <li>All prices are listed in LKR unless stated otherwise.</li>
               <li>Availability and pricing may change without prior notice.</li>
               <li>We reserve the right to refuse or cancel any order at our discretion.</li>
             </ul>
 
-            <h3 className="font-smooch text-2xl text-gray-900 mt-10 mb-4">Shipping</h3>
-            <p className="font-saira text-gray-700">
+            <h3 className="mt-10 mb-4 border-t border-gray-200 pt-8 text-lg font-bold text-gray-900">Shipping</h3>
+            <p className="leading-relaxed text-gray-600">
               Shipping times are estimates and may vary due to carrier or regional constraints. Risk of loss passes to you upon delivery to the carrier.
             </p>
 
-            <h3 className="font-smooch text-2xl text-gray-900 mt-10 mb-4">Limitation of Liability</h3>
-            <p className="font-saira text-gray-700">
+            <h3 className="mt-10 mb-4 border-t border-gray-200 pt-8 text-lg font-bold text-gray-900">Limitation of Liability</h3>
+            <p className="leading-relaxed text-gray-600">
               To the maximum extent permitted by law, Aroma Notes is not liable for indirect, incidental, or consequential damages arising from the use of our products or services.
             </p>
 
-            <h3 className="font-smooch text-2xl text-gray-900 mt-10 mb-4">Changes to Terms</h3>
-            <p className="font-saira text-gray-700">
+            <h3 className="mt-10 mb-4 border-t border-gray-200 pt-8 text-lg font-bold text-gray-900">Changes to Terms</h3>
+            <p className="leading-relaxed text-gray-600">
               We may update these Terms from time to time. Continued use of the site after updates constitutes acceptance of the revised Terms.
             </p>
           </div>

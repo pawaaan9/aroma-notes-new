@@ -26,28 +26,29 @@ export default function ReturnPolicyPage() {
         <Header />
       </div>
 
-      <main className="flex-grow animate-fade-in-up">
+      <main className="flex-grow bg-white">
         <section>
           <HeroVideo
+            eyebrow="Customer Care"
             title="Return & Exchange Policy"
             subtitle="We strive for your satisfaction. Review our return and exchange terms."
           />
         </section>
 
-        <section className="py-16 sm:py-24 bg-white">
-          <div className="mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw] prose prose-gray max-w-4xl">
-            <h2 className="font-smooch text-3xl sm:text-4xl text-gray-900 mb-6">Eligibility</h2>
-            <p className="font-saira text-gray-700">
+        <section className="bg-white px-4 py-16 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-3xl border border-gray-200 px-6 py-10 sm:px-12 sm:py-14">
+            <h2 className="mb-5 text-2xl font-extrabold uppercase tracking-[0.06em] text-gray-900">Eligibility</h2>
+            <p className="leading-relaxed text-gray-600">
               For hygiene and quality assurance reasons, opened or used fragrances may not be eligible for return. Please contact us within 7 days of delivery for any concerns.
             </p>
 
-            <h3 className="font-smooch text-2xl text-gray-900 mt-10 mb-4">Damaged or Incorrect Items</h3>
-            <p className="font-saira text-gray-700">
+            <h3 className="mt-10 mb-4 border-t border-gray-200 pt-8 text-lg font-bold text-gray-900">Damaged or Incorrect Items</h3>
+            <p className="leading-relaxed text-gray-600">
               If your order arrives damaged or incorrect, please reach out with your order number and photos within 48 hours so we can assist promptly.
             </p>
 
-            <h3 className="font-smooch text-2xl text-gray-900 mt-10 mb-4">Process</h3>
-            <ul className="list-disc pl-6 font-saira text-gray-700 space-y-2">
+            <h3 className="mt-10 mb-4 border-t border-gray-200 pt-8 text-lg font-bold text-gray-900">Process</h3>
+            <ul className="list-disc space-y-2 pl-6 leading-relaxed text-gray-600 marker:text-primary">
               <li>Contact us with your order details and concern.</li>
               <li>We will review and advise next steps, including return shipping guidance if applicable.</li>
               <li>Approved refunds are issued to the original payment method.</li>

@@ -1,86 +1,44 @@
 "use client";
-import { useMemo, useState } from "react";
-import Image from "next/image";
 import type { ProductVariant as SanityVariant } from "@/types/product";
 import { formatLkr } from "@/utils/currency";
-import payzyLogo from "@/assets/payzy logo.jpg";
 
 type VariantSelectorProps = {
   variants: SanityVariant[];
-  value?: number;
-  onChange?: (index: number) => void;
+  value: number;
+  onChange: (index: number) => void;
 };
 
+/** Size options as boxed tiles, each showing its own price. */
 export default function VariantSelector({ variants, value, onChange }: VariantSelectorProps) {
-  const inOrder = useMemo(() => [...variants], [variants]);
-  const [internalIdx, setInternalIdx] = useState(-1);
-  const selectedIdx = typeof value === 'number' ? value : internalIdx;
-  const selected = selectedIdx >= 0 ? inOrder[selectedIdx] ?? null : null;
-  const price = selected ? (selected.discountPrice ?? selected.price ?? null) : null;
-  const hasDiscount = !!selected && typeof selected.discountPrice === 'number' && typeof selected.price === 'number' && selected.discountPrice < selected.price;
-
   return (
-    <div className="font-saira">
-      <div className="flex flex-wrap gap-2">
-        {inOrder.map((v, i) => {
-          const isActive = i === selectedIdx;
-          const isOut = v.inStock === false;
-          return (
-            <button
-              key={i}
-              type="button"
-              disabled={isOut}
-              className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-                isActive
-                  ? "border-primary text-primary bg-primary/10"
-                  : isOut
-                  ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                  : "border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-              }`}
-              onClick={() => {
-                setInternalIdx(i);
-                onChange?.(i);
-              }}
-            >
-              {v.size}
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-3 flex items-center gap-3">
-        {(() => {
-          if (selected) {
-            return (
-              <span className={`text-sm font-medium ${selected.inStock === false ? "text-red-600" : "text-green-600"}`}>
-                {selected.inStock === false ? "Out of stock" : "In stock"}
-              </span>
-            );
-          }
-          const allOut = inOrder.length > 0 && inOrder.every((v) => v.inStock === false);
-          return allOut ? (
-            <span className="text-sm font-medium text-red-600">Out of stock</span>
-          ) : null;
-        })()}
-      </div>
-      {price != null ? (
-        <div className="mt-2">
-          <p className="text-xl font-bold text-primary">
-            {formatLkr(price)}
-            {hasDiscount && selected?.price != null ? (
-              <span className="ml-2 text-base font-normal text-gray-500 line-through">{formatLkr(selected.price)}</span>
-            ) : null}
-          </p>
-        </div>
-      ) : null}
-      {selected?.price != null && (
-        <div className="mt-2.5 flex items-center gap-2">
-          <Image src={payzyLogo} alt="Payzy" width={32} height={32} className="rounded-md shrink-0" />
-          <span className="text-sm font-bold text-gray-800 font-saira">{formatLkr(selected.price / 4)}</span>
-          <span className="text-sm text-gray-500 font-saira">x 4 interest free payments</span>
-        </div>
-      )}
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {variants.map((v, i) => {
+        const isActive = i === value;
+        const isOut = v.inStock === false;
+        const price = v.discountPrice ?? v.price ?? null;
+        return (
+          <button
+            key={i}
+            type="button"
+            disabled={isOut}
+            aria-pressed={isActive}
+            onClick={() => onChange(i)}
+            className={`relative border px-3 py-3 text-left transition-colors ${
+              isActive
+                ? "border-gray-900 bg-gray-900 text-white"
+                : isOut
+                  ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                  : "border-gray-300 text-gray-900 hover:border-gray-900"
+            }`}
+          >
+            {isActive && <span className="absolute right-0 top-0 h-2.5 w-2.5 bg-primary" />}
+            <span className={`block text-sm font-bold ${isOut ? "line-through" : ""}`}>{v.size}</span>
+            <span className={`mt-0.5 block text-xs ${isActive ? "text-gray-300" : "text-gray-500"}`}>
+              {isOut ? "Sold out" : price != null ? formatLkr(price) : ""}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
-
-

@@ -21,11 +21,11 @@ export default function ComboCartCard({
   const savings = Math.max(0, group.setOriginalPrice - group.setPrice);
 
   return (
-    <div className="rounded-xl border-2 border-amber-300 bg-amber-50/40 p-4 shadow-sm transition-shadow hover:shadow-md">
+    <div className="border border-amber-300 bg-amber-50/40 p-4 shadow-sm transition-shadow hover:shadow-md">
       {/* Combo header */}
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 px-2.5 py-1">
+          <span className="inline-flex shrink-0 items-center gap-1.5 bg-primary px-2.5 py-1">
             <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21" />
             </svg>
@@ -49,8 +49,8 @@ export default function ComboCartCard({
       {/* Products in the bundle */}
       <div className="space-y-2">
         {group.items.map((item) => (
-          <div key={item.id} className="flex items-center gap-3 rounded-lg bg-white/80 p-2">
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+          <div key={item.id} className="flex items-center gap-3 bg-white/80 p-2">
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden border border-gray-200 bg-gray-100">
               {item.imageUrl ? (
                 <Image
                   src={safeImageUrl(item.imageUrl)}
@@ -83,7 +83,7 @@ export default function ComboCartCard({
         <div className="flex items-center gap-2">
           <button
             onClick={() => onQuantity(group.comboId, group.quantity - 1)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-100"
+            className="flex h-8 w-8 items-center justify-center border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-100"
             aria-label="Fewer combos"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -95,7 +95,7 @@ export default function ComboCartCard({
           </span>
           <button
             onClick={() => onQuantity(group.comboId, group.quantity + 1)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-100"
+            className="flex h-8 w-8 items-center justify-center border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-100"
             aria-label="More combos"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>

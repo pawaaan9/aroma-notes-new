@@ -40,13 +40,13 @@ export default async function ProductsPage() {
     <div className="flex min-h-screen w-full flex-col">
       <Header currentPage="products" />
       
-      <main className="flex-grow relative animate-fade-in-up">
+      <main className="flex-grow relative bg-white">
         <div className="relative z-20">
-          <HeroVideo title="Shop Our Collection" subtitle="Discover artisan fragrances crafted to inspire." />
+          <HeroVideo eyebrow="The Collection" title="Shop Our Collection" subtitle="Discover artisan fragrances crafted to inspire." />
         </div>
         
         <div className="relative z-20">
-          <div className="mx-auto max-w-none px-4 py-12 sm:px-6 lg:px-[5vw]">
+          <div className="mx-auto max-w-none px-4 py-12 sm:px-6 lg:px-[10vw]">
             <Suspense
               fallback={
                 <div className="flex justify-center py-20">
@@ -62,7 +62,7 @@ export default async function ProductsPage() {
             >
               {products.length === 0 ? (
                 <div className="flex items-center justify-center py-20">
-                  <p className="text-center text-gray-500 font-saira">No products available yet. Check back soon!</p>
+                  <p className="text-center text-gray-500">No products available yet. Check back soon.</p>
                 </div>
               ) : (
                 <ProductsSearchClient products={products} />
