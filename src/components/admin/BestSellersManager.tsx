@@ -50,27 +50,35 @@ export default function BestSellersManager() {
     [products],
   );
 
+  // Saved IDs can point at products that were since deleted. Those must not take up
+  // one of the slots, so once the catalog has loaded the editor works on live IDs only.
+  const canPrune = !loading && products.length > 0;
+  const liveIds = useMemo(
+    () => (canPrune ? selectedIds.filter((id) => productsById.has(id)) : selectedIds),
+    [canPrune, selectedIds, productsById],
+  );
+
   const selected = useMemo(
-    () => selectedIds.map((id) => productsById.get(id)).filter((p): p is Product => !!p),
-    [selectedIds, productsById],
+    () => liveIds.map((id) => productsById.get(id)).filter((p): p is Product => !!p),
+    [liveIds, productsById],
   );
 
   const results = useMemo(() => {
     const term = search.trim().toLowerCase();
     return products
-      .filter((p) => !selectedIds.includes(p._id))
+      .filter((p) => !liveIds.includes(p._id))
       .filter((p) =>
         term
           ? `${p.name} ${p.brand ?? ""}`.toLowerCase().includes(term)
           : true,
       )
       .slice(0, term ? 20 : 8);
-  }, [products, selectedIds, search]);
+  }, [products, liveIds, search]);
 
   const dirty =
-    selectedIds.length !== savedIds.length ||
-    selectedIds.some((id, i) => savedIds[i] !== id);
-  const isFull = selectedIds.length >= MAX_BEST_SELLERS;
+    liveIds.length !== savedIds.length ||
+    liveIds.some((id, i) => savedIds[i] !== id);
+  const isFull = liveIds.length >= MAX_BEST_SELLERS;
 
   const add = (id: string) => {
     if (isFull) {
@@ -78,7 +86,7 @@ export default function BestSellersManager() {
       return;
     }
     setMessage(null);
-    setSelectedIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
+    setSelectedIds(liveIds.includes(id) ? liveIds : [...liveIds, id]);
   };
 
   const remove = (id: string) => {
@@ -88,21 +96,19 @@ export default function BestSellersManager() {
 
   const move = (index: number, direction: -1 | 1) => {
     const target = index + direction;
-    if (target < 0 || target >= selectedIds.length) return;
+    if (target < 0 || target >= liveIds.length) return;
     setMessage(null);
-    setSelectedIds((ids) => {
-      const next = [...ids];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
+    const next = [...liveIds];
+    [next[index], next[target]] = [next[target], next[index]];
+    setSelectedIds(next);
   };
 
   const save = async () => {
     setSaving(true);
     setMessage(null);
     try {
-      await saveBestSellerIds(selectedIds);
-      setSavedIds(selectedIds);
+      await saveBestSellerIds(liveIds);
+      setSavedIds(liveIds);
       // Best effort: the home page also revalidates on its own every 2 minutes.
       await fetch("/api/best-sellers/revalidate", { method: "POST" }).catch(() => {});
       setMessage({ type: "ok", text: "Saved. The home page is updated." });
@@ -125,7 +131,7 @@ export default function BestSellersManager() {
           <div>
             <h2 className="text-base font-semibold text-white font-saira">Best Selling Products</h2>
             <p className="text-xs text-gray-400 font-saira">
-              Featured on the home page · {selectedIds.length}/{MAX_BEST_SELLERS} selected
+              Featured on the home page · {liveIds.length}/{MAX_BEST_SELLERS} selected
             </p>
           </div>
         </div>
@@ -304,9 +310,9 @@ export default function BestSellersManager() {
             )}
           </div>
 
-          {!search && !loading && products.length > results.length + selectedIds.length && (
+          {!search && !loading && products.length > results.length + liveIds.length && (
             <p className="mt-2 text-[11px] text-gray-500 font-saira">
-              Showing {results.length} of {products.length - selectedIds.length}. Search to find more.
+              Showing {results.length} of {products.length - liveIds.length}. Search to find more.
             </p>
           )}
         </div>
