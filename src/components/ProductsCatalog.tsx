@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import MobileFilters from "@/components/MobileFilters";
 import type { Product } from "@/types/product";
-import { formatLkr } from "@/utils/currency";
+import { productCardProps } from "@/components/ProductGrid";
 
 type GenderKey = "female" | "male" | "unisex";
 
@@ -63,10 +63,10 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
       {/* Sidebar filters visible on desktop only */}
       <aside className="hidden lg:block lg:col-span-3">
-        <div className="sticky top-28 space-y-10">
+        <div className="sticky top-28 space-y-8 border border-gray-200 bg-white p-6">
           {/* Heading */}
           <div>
-            <h3 className="text-lg font-semibold tracking-[0.2em] text-gray-800">FILTERS</h3>
+            <h3 className="border-b border-gray-200 pb-4 text-sm font-extrabold uppercase tracking-[0.2em] text-gray-900">Filters</h3>
           </div>
 
           {/* Availability */}
@@ -77,7 +77,7 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
             <label className="flex items-center gap-3 text-sm text-gray-700 font-saira">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 accent-primary"
+                className="h-4 w-4 border-gray-300 accent-primary"
                 checked={inStockOnly}
                 onChange={(e) => setInStockOnly(e.target.checked)}
               />
@@ -94,7 +94,7 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
               <input
                 type="number"
                 min={0}
-                className="w-32 rounded-md border border-gray-300 bg-white text-gray-900 placeholder-gray-400 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/30"
+                className="w-full min-w-0 border border-gray-300 bg-white text-gray-900 placeholder-gray-400 px-3 py-2 text-sm outline-none focus:border-gray-900"
                 placeholder="Min"
                 inputMode="numeric"
                 value={priceMin ?? ""}
@@ -105,7 +105,7 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
               <input
                 type="number"
                 min={0}
-                className="w-32 rounded-md border border-gray-300 bg-white text-gray-900 placeholder-gray-400 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/30"
+                className="w-full min-w-0 border border-gray-300 bg-white text-gray-900 placeholder-gray-400 px-3 py-2 text-sm outline-none focus:border-gray-900"
                 placeholder="Max"
                 inputMode="numeric"
                 value={priceMax ?? ""}
@@ -124,7 +124,7 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 accent-primary"
+                  className="h-4 w-4 border-gray-300 accent-primary"
                   checked={gender.female}
                   onChange={(e) => setGender({ ...gender, female: e.target.checked })}
                 />
@@ -133,7 +133,7 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 accent-primary"
+                  className="h-4 w-4 border-gray-300 accent-primary"
                   checked={gender.male}
                   onChange={(e) => setGender({ ...gender, male: e.target.checked })}
                 />
@@ -142,7 +142,7 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 accent-primary"
+                  className="h-4 w-4 border-gray-300 accent-primary"
                   checked={gender.unisex}
                   onChange={(e) => setGender({ ...gender, unisex: e.target.checked })}
                 />
@@ -160,7 +160,7 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
               <label className="flex items-center gap-3 py-1">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 accent-primary"
+                  className="h-4 w-4 border-gray-300 accent-primary"
                   checked={perfumeType.originals}
                   onChange={(e) => setPerfumeType({ ...perfumeType, originals: e.target.checked })}
                 />
@@ -169,7 +169,7 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
               <label className="flex items-center gap-3 py-1">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 accent-primary"
+                  className="h-4 w-4 border-gray-300 accent-primary"
                   checked={perfumeType.inspired}
                   onChange={(e) => setPerfumeType({ ...perfumeType, inspired: e.target.checked })}
                 />
@@ -182,7 +182,7 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
 
       {/* Product grid + mobile filters trigger */}
       <section className="lg:col-span-9">
-        <div className="mb-8 flex items-end justify-end lg:hidden">
+        <div className="mb-5 flex items-end justify-end lg:hidden">
           <MobileFilters
             inStockOnly={inStockOnly}
             setInStockOnly={setInStockOnly}
@@ -197,36 +197,32 @@ export default function ProductsCatalog({ products, searchQuery = "" }: { produc
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-          {filteredProducts.map((product, index) => {
-            const imageSrc = product.coverImageUrl ?? product.variants?.[0]?.photoUrl ?? "/yusuf-bhai.webp";
-            const path = `/product-view/${product.slug?.current ?? product._id}`;
-            const label = product.brand ? product.brand.toUpperCase() : undefined;
-            const target = product.variants?.find((v) => v.size?.toLowerCase().includes("100ml")) ?? product.variants?.[0] ?? null;
-            const originalPrice = target?.price ?? null;
-            const discountPrice = target?.discountPrice ?? null;
-            const displayPrice = discountPrice != null ? formatLkr(discountPrice) : originalPrice != null ? formatLkr(originalPrice) : "";
-            const displayOriginalPrice = discountPrice != null && originalPrice != null ? formatLkr(originalPrice) : undefined;
-            const payzyX4 = originalPrice != null ? formatLkr(originalPrice / 4) : undefined;
-            return (
-              <div key={product._id}>
+        <div className="mb-5 flex items-center justify-between border-b border-gray-200 pb-4">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
+            {filteredProducts.length} {filteredProducts.length === 1 ? "Product" : "Products"}
+          </p>
+        </div>
+        {filteredProducts.length === 0 ? (
+          <div className="border border-gray-200 px-6 py-16 text-center text-sm text-gray-500">
+            No products match these filters.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
+            {filteredProducts.map((product, index) => (
+              <div
+                key={product._id}
+                data-reveal
+                style={{ "--reveal-delay": `${(index % 4) * 70}ms` } as React.CSSProperties}
+              >
                 <ProductCard
-                  name={product.name}
-                  price={displayPrice}
-                  originalPrice={displayOriginalPrice}
-                  payzyX4={payzyX4}
-                  imageSrc={imageSrc}
-                  imageAlt={product.name}
-                  delay={`delay-${(index + 1) * 100}`}
-                  href={path}
-                  label={label}
+                  {...productCardProps(product)}
                   priority={index < 6}
-                  sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, 50vw"
+                  sizes="(min-width: 1280px) 17vw, (min-width: 640px) 25vw, 48vw"
                 />
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

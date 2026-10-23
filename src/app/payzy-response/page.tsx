@@ -171,9 +171,9 @@ function PayzyResponseContent() {
 
   if (result.status === "loading") {
     return (
-      <main className="flex flex-1 items-center justify-center bg-white px-4 pt-24 pb-16">
+      <main className="flex flex-1 items-center justify-center bg-white px-4 pt-32 pb-16">
         <div className="text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center bg-gray-100">
             <svg
               className="h-10 w-10 animate-spin text-primary"
               viewBox="0 0 24 24"
@@ -207,9 +207,9 @@ function PayzyResponseContent() {
 
   if (result.status === "success") {
     return (
-      <main className="flex flex-1 items-center justify-center bg-white px-4 pt-24 pb-16">
+      <main className="flex flex-1 items-center justify-center bg-white px-4 pt-32 pb-16">
         <div className="mx-auto max-w-md text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center bg-green-100">
             <svg
               className="h-10 w-10 text-green-600"
               fill="none"
@@ -232,7 +232,7 @@ function PayzyResponseContent() {
             Thank you for your order. Your Payzy payment has been confirmed.
           </p>
 
-          <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5">
+          <div className="mt-6 border border-gray-200 bg-gray-50 p-5">
             <p className="text-sm text-gray-500 font-saira">Order Number</p>
             <p className="mt-1 text-xl font-bold text-primary font-saira">
               {result.orderNumber}
@@ -261,13 +261,13 @@ function PayzyResponseContent() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/products"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-saira font-semibold text-white transition-all hover:bg-primary/90"
+              className="inline-flex items-center justify-center gap-2 bg-primary px-6 py-3 font-saira font-semibold text-white transition-all hover:bg-primary/90"
             >
               Continue Shopping
             </Link>
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-saira font-medium text-gray-700 transition-all hover:bg-gray-100"
+              className="inline-flex items-center justify-center gap-2 border border-gray-300 px-6 py-3 font-saira font-medium text-gray-700 transition-all hover:bg-gray-100"
             >
               Back to Home
             </Link>
@@ -278,9 +278,9 @@ function PayzyResponseContent() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-white px-4 pt-24 pb-16">
+    <main className="flex flex-1 items-center justify-center bg-white px-4 pt-32 pb-16">
       <div className="mx-auto max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-100">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center bg-rose-100">
           <svg
             className="h-10 w-10 text-rose-600"
             fill="none"
@@ -306,13 +306,13 @@ function PayzyResponseContent() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/checkout"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-saira font-semibold text-white transition-all hover:bg-primary/90"
+            className="inline-flex items-center justify-center gap-2 bg-primary px-6 py-3 font-saira font-semibold text-white transition-all hover:bg-primary/90"
           >
             Try Again
           </Link>
           <Link
             href="/products"
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-saira font-medium text-gray-700 transition-all hover:bg-gray-100"
+            className="inline-flex items-center justify-center gap-2 border border-gray-300 px-6 py-3 font-saira font-medium text-gray-700 transition-all hover:bg-gray-100"
           >
             Continue Shopping
           </Link>
@@ -330,7 +330,7 @@ export default function PayzyResponsePage() {
       </div>
       <Suspense
         fallback={
-          <main className="flex flex-1 items-center justify-center bg-white px-4 pt-24 pb-16">
+          <main className="flex flex-1 items-center justify-center bg-white px-4 pt-32 pb-16">
             <div className="text-center">
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-primary" />
               <p className="text-gray-500 font-saira">Loading...</p>

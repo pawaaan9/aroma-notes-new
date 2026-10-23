@@ -25,11 +25,11 @@ export default function MainAccordsChips({ accords }: Props) {
       {items.map((a, i) => (
         <div
           key={`${a.name}-${i}`}
-          className="px-3 py-1 rounded-full text-sm border border-gray-700 text-gray-200 flex items-center gap-2 animate-fade-in-up"
+          className="px-3 py-1 text-sm border border-gray-700 text-gray-200 flex items-center gap-2 animate-fade-in-up"
           style={{ animationDelay: `${i * 80}ms` }}
         >
           <span
-            className="inline-block w-2 h-2 rounded-full"
+            className="inline-block w-2 h-2 "
             style={{ backgroundColor: a?.color?.hex || '#999' }}
           />
           <span>{a?.name}</span>

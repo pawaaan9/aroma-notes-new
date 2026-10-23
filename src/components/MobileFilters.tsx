@@ -52,7 +52,7 @@ export default function MobileFilters({
       <div className="flex items-center justify-between">
         <button
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+          className="inline-flex items-center gap-2 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 6h18M6 12h12M10 18h4" />
@@ -66,13 +66,13 @@ export default function MobileFilters({
         createPortal(
           <>
             <div
-              className="fixed inset-0 z-[200] bg-black/25 backdrop-blur-md transition-opacity"
+              className="fixed inset-0 z-[200] bg-black/50 transition-opacity"
               onClick={() => setOpen(false)}
               aria-hidden
             />
 
             <div
-              className="fixed top-0 right-0 bottom-0 z-[201] w-[min(85vw,380px)] bg-white shadow-2xl flex flex-col rounded-tl-2xl rounded-bl-2xl overflow-hidden animate-slide-in-right"
+              className="fixed top-0 right-0 bottom-0 z-[201] w-[min(85vw,380px)] bg-white shadow-2xl flex flex-col overflow-hidden animate-slide-in-right"
               role="dialog"
               aria-modal="true"
               aria-label="Filters"
@@ -82,7 +82,7 @@ export default function MobileFilters({
                 <h2 className="text-lg font-bold font-saira uppercase text-gray-900">Filters</h2>
                 <button
                   onClick={() => setOpen(false)}
-                  className="p-2 -m-2 text-gray-500 hover:text-gray-800 rounded-lg transition-colors"
+                  className="p-2 -m-2 text-gray-500 hover:text-gray-800 transition-colors"
                   aria-label="Close filters"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +99,7 @@ export default function MobileFilters({
                   <label className="flex items-center gap-3 text-sm text-gray-700 font-saira">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                      className="h-4 w-4 border-gray-300 accent-gray-900"
                       checked={inStockOnly}
                       onChange={(e) => setInStockOnly(e.target.checked)}
                     />
@@ -114,7 +114,7 @@ export default function MobileFilters({
                     <input
                       type="number"
                       min={0}
-                      className="w-[92px] rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-2.5 py-1.5 text-xs font-saira focus:border-gray-400 focus:ring-1 focus:ring-gray-300 outline-none"
+                      className="w-[92px] border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-2.5 py-1.5 text-xs font-saira focus:border-gray-400 focus:ring-1 focus:ring-gray-300 outline-none"
                       placeholder="Min"
                       inputMode="numeric"
                       value={priceMin ?? ""}
@@ -124,7 +124,7 @@ export default function MobileFilters({
                     <input
                       type="number"
                       min={0}
-                      className="w-[92px] rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-2.5 py-1.5 text-xs font-saira focus:border-gray-400 focus:ring-1 focus:ring-gray-300 outline-none"
+                      className="w-[92px] border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-2.5 py-1.5 text-xs font-saira focus:border-gray-400 focus:ring-1 focus:ring-gray-300 outline-none"
                       placeholder="Max"
                       inputMode="numeric"
                       value={priceMax ?? ""}
@@ -141,7 +141,7 @@ export default function MobileFilters({
                       <label key={g} className="flex items-center gap-3 text-sm text-gray-700 font-saira capitalize">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                          className="h-4 w-4 border-gray-300 accent-gray-900"
                           checked={gender[g]}
                           onChange={(e) => setGender({ ...gender, [g]: e.target.checked })}
                         />
@@ -158,7 +158,7 @@ export default function MobileFilters({
                     <label className="flex items-center gap-3 text-sm text-gray-700 font-saira">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                        className="h-4 w-4 border-gray-300 accent-gray-900"
                         checked={perfumeType.originals}
                         onChange={(e) => setPerfumeType({ ...perfumeType, originals: e.target.checked })}
                       />
@@ -167,7 +167,7 @@ export default function MobileFilters({
                     <label className="flex items-center gap-3 text-sm text-gray-700 font-saira">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                        className="h-4 w-4 border-gray-300 accent-gray-900"
                         checked={perfumeType.inspired}
                         onChange={(e) => setPerfumeType({ ...perfumeType, inspired: e.target.checked })}
                       />
@@ -181,7 +181,7 @@ export default function MobileFilters({
               <div className="border-t border-gray-200 bg-white p-4 shrink-0">
                 <button
                   onClick={() => setOpen(false)}
-                  className="block w-full py-3 px-4 rounded-lg bg-gray-900 text-white font-saira font-semibold text-center hover:bg-gray-800 transition-colors uppercase"
+                  className="block w-full py-3 px-4 bg-gray-900 text-white font-saira font-semibold text-center hover:bg-gray-800 transition-colors uppercase"
                 >
                   View Results
                 </button>

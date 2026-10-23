@@ -50,21 +50,21 @@ export default function CartDrawer() {
     <>
       {/* Backdrop - blur on left shows content */}
       <div
-        className="fixed inset-0 z-[200] bg-black/25 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 z-[200] bg-black/50 transition-opacity"
         onClick={close}
         aria-hidden
       />
 
       {/* Drawer panel - slides from right, flush right, free space on left */}
       <div
-        className="fixed top-0 right-0 bottom-0 z-[201] w-[min(85vw,380px)] bg-white shadow-2xl flex flex-col rounded-tl-2xl rounded-bl-2xl overflow-hidden animate-slide-in-right"
+        className="fixed top-0 right-0 bottom-0 z-[201] w-[min(85vw,380px)] bg-white shadow-2xl flex flex-col overflow-hidden animate-slide-in-right"
         role="dialog"
         aria-modal="true"
         aria-label="Shopping cart"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-white shrink-0">
-          <h2 className="text-lg font-bold font-saira uppercase text-gray-900">
+          <h2 className="text-sm font-extrabold uppercase tracking-[0.18em] text-gray-900">
             Your Cart
             {count > 0 && (
               <span className="ml-2 text-sm font-normal text-gray-500">
@@ -74,7 +74,7 @@ export default function CartDrawer() {
           </h2>
           <button
             onClick={close}
-            className="p-2 -m-2 text-gray-500 hover:text-gray-800 rounded-lg transition-colors"
+            className="p-2 -m-2 text-gray-500 hover:text-gray-800 transition-colors"
             aria-label="Close cart"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,7 +87,7 @@ export default function CartDrawer() {
         <div className="flex-1 overflow-y-auto">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-gray-100 flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
@@ -96,7 +96,7 @@ export default function CartDrawer() {
               <Link
                 href="/products"
                 onClick={close}
-                className="mt-4 inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-gray-900 text-white font-saira font-medium hover:bg-gray-800 transition-colors"
+                className="mt-4 inline-flex items-center justify-center px-5 py-2.5 bg-gray-900 text-white font-saira font-medium hover:bg-gray-800 transition-colors"
               >
                 Browse Products
               </Link>
@@ -109,11 +109,11 @@ export default function CartDrawer() {
                   return (
                     <div
                       key={group.key}
-                      className="rounded-lg border-2 border-amber-300 bg-amber-50/50 p-3"
+                      className="border border-amber-300 bg-amber-50/50 p-3"
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <div className="flex min-w-0 items-center gap-1.5">
-                          <span className="shrink-0 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                          <span className="shrink-0 bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
                             Combo
                           </span>
                           <p className="truncate text-xs font-semibold text-gray-900">
@@ -122,7 +122,7 @@ export default function CartDrawer() {
                         </div>
                         <button
                           onClick={() => removeCombo(group.comboId)}
-                          className="shrink-0 rounded p-1 text-gray-400 transition-colors hover:text-rose-600"
+                          className="shrink-0 p-1 text-gray-400 transition-colors hover:text-rose-600"
                           aria-label="Remove combo"
                         >
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +134,7 @@ export default function CartDrawer() {
                       <div className="space-y-2">
                         {group.items.map((it) => (
                           <div key={it.id} className="flex items-center gap-2">
-                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                            <div className="h-10 w-10 shrink-0 overflow-hidden border border-gray-200 bg-white">
                               {it.imageUrl ? (
                                 <Image
                                   src={safeImageUrl(it.imageUrl)}
@@ -180,9 +180,9 @@ export default function CartDrawer() {
                 return (
                 <div
                   key={group.key}
-                  className="flex gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100"
+                  className="flex gap-3 p-3 bg-gray-50 border border-gray-100"
                 >
-                  <div className="h-14 w-14 rounded-lg overflow-hidden bg-white shrink-0 border border-gray-200">
+                  <div className="h-14 w-14 overflow-hidden bg-white shrink-0 border border-gray-200">
                     {it.imageUrl ? (
                       <Image
                         src={safeImageUrl(it.imageUrl)}
@@ -208,7 +208,7 @@ export default function CartDrawer() {
                   </div>
                   <button
                     onClick={() => removeItem(it.id)}
-                    className="p-1.5 text-gray-400 hover:text-rose-600 rounded transition-colors shrink-0"
+                    className="p-1.5 text-gray-400 hover:text-rose-600 transition-colors shrink-0"
                     aria-label="Remove item"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,7 +241,7 @@ export default function CartDrawer() {
                         onClick={close}
                         className="flex-shrink-0 w-20 group"
                       >
-                        <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                        <div className="aspect-square overflow-hidden bg-gray-100 border border-gray-200">
                           <Image
                             src={imageSrc}
                             alt={p.name}
@@ -272,13 +272,13 @@ export default function CartDrawer() {
                 <Link
                   href="/cart"
                   onClick={close}
-                  className="py-2.5 px-4 rounded-lg border border-gray-300 text-gray-700 font-saira font-medium text-center text-sm hover:bg-gray-50 transition-colors"
+                  className="py-2.5 px-4 border border-gray-300 text-gray-700 font-saira font-medium text-center text-sm hover:bg-gray-50 transition-colors"
                 >
                   View Cart
                 </Link>
                 <button
                   onClick={() => clear()}
-                  className="py-2.5 px-4 rounded-lg border border-gray-300 text-gray-700 font-saira font-medium text-sm hover:bg-gray-50 transition-colors"
+                  className="py-2.5 px-4 border border-gray-300 text-gray-700 font-saira font-medium text-sm hover:bg-gray-50 transition-colors"
                 >
                   Clear
                 </button>
@@ -288,7 +288,7 @@ export default function CartDrawer() {
             <Link
               href="/checkout"
               onClick={close}
-              className="block w-full py-3 px-4 rounded-lg bg-gray-900 text-white font-saira font-semibold text-center hover:bg-gray-800 transition-colors uppercase"
+              className="block w-full bg-primary px-4 py-3.5 text-center text-sm font-bold uppercase tracking-[0.18em] text-white transition-colors hover:bg-[#e07610]"
             >
               Checkout
             </Link>

@@ -9,7 +9,7 @@ import { splitComboPrice, type ResolvedCombo } from "@/lib/combo-offers";
 import { formatLkr } from "@/utils/currency";
 import { safeImageUrl } from "@/utils/image";
 
-function ComboCard({ combo }: { combo: ResolvedCombo }) {
+function ComboCard({ combo, index }: { combo: ResolvedCombo; index: number }) {
   const { addCombo, hasCombo } = useCart();
   const { open } = useCartDrawer();
   const [added, setAdded] = useState(false);
@@ -44,172 +44,123 @@ function ComboCard({ combo }: { combo: ResolvedCombo }) {
   };
 
   return (
-    <div className="group relative">
-      {/* Glow */}
-      <div className="absolute -inset-px rounded-[2rem] bg-gradient-to-r from-amber-500/40 via-rose-500/30 to-amber-500/40 opacity-0 blur transition-opacity duration-500 group-hover:opacity-100" />
+    <div className="group grid border border-white/15 bg-black transition-colors duration-300 hover:border-primary lg:grid-cols-[110px_1fr_380px]">
+      {/* Index */}
+      <div className="flex items-center justify-between border-b border-white/15 px-5 py-4 lg:flex-col lg:justify-center lg:gap-4 lg:border-b-0 lg:border-r lg:px-0 lg:py-8">
+        <span className="text-outline text-5xl font-black leading-none text-white lg:text-6xl">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary lg:[writing-mode:vertical-rl] lg:rotate-180">
+          {count} Piece Set
+        </span>
+      </div>
 
-      <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/[0.08] to-white/[0.02] backdrop-blur-sm">
-        {/* Ribbon */}
-        {combo.savings > 0 && (
-          <div className="absolute -right-12 top-7 z-20 rotate-45 bg-gradient-to-r from-amber-500 to-rose-500 px-14 py-1.5 text-center shadow-lg">
-            <span className="font-saira text-[11px] font-bold uppercase tracking-wider text-white">
+      {/* Products */}
+      <div className="flex items-center justify-center p-5 sm:p-8">
+        <div className="flex w-full items-stretch" style={{ maxWidth: count * 240 }}>
+        {combo.items.map((item, i) => (
+          <div key={`${item.product._id}-${i}`} className="relative flex min-w-0 flex-1">
+            {i > 0 && (
+              <span className="absolute left-0 top-[38%] z-10 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-primary text-lg font-black text-white sm:h-10 sm:w-10">
+                +
+              </span>
+            )}
+            <Link
+              href={`/product-view/${item.product.slug?.current ?? item.product._id}`}
+              className="block min-w-0 flex-1"
+            >
+              <div className={`relative aspect-square w-full overflow-hidden border border-white/15 bg-gray-900 ${i > 0 ? "border-l-0" : ""}`}>
+                <Image
+                  src={safeImageUrl(item.imageUrl)}
+                  alt={item.product.name}
+                  fill
+                  sizes="(min-width: 1024px) 240px, 45vw"
+                  quality={68}
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                {!item.inStock && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-white">Sold out</span>
+                  </div>
+                )}
+              </div>
+              <div className={`border border-t-0 border-white/15 px-3 py-2.5 ${i > 0 ? "border-l-0" : ""}`}>
+                <p className="truncate text-xs font-bold text-white sm:text-sm">{item.product.name}</p>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
+                  {item.size ?? "Standard"}
+                </p>
+              </div>
+            </Link>
+          </div>
+        ))}
+        </div>
+      </div>
+
+      {/* Price panel */}
+      <div className="flex flex-col bg-white p-6 text-gray-900 sm:p-8">
+        <div className="flex items-start justify-between gap-4">
+          <p className="eyebrow text-gray-500">Bundle Offer</p>
+          {combo.savings > 0 && (
+            <span className="bg-primary px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-white">
               Save {combo.savingsPercent}%
             </span>
-          </div>
+          )}
+        </div>
+        <h3 className="mt-3 text-2xl font-black uppercase leading-tight tracking-tight">{combo.name}</h3>
+        {combo.description && (
+          <p className="mt-2 text-sm leading-relaxed text-gray-500">{combo.description}</p>
+        )}
+        {combo.freeDelivery && (
+          <p className="mt-4 flex items-center gap-2 self-start border border-gray-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em]">
+            <span className="h-1.5 w-1.5 bg-primary" />
+            Free delivery
+          </p>
         )}
 
-        <div className="grid lg:grid-cols-[1.15fr_1fr]">
-          {/* Products */}
-          <div className="relative border-b border-white/10 bg-black/20 p-6 sm:p-8 lg:border-b-0 lg:border-r">
-            <p className="mb-5 text-center font-saira text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-400/80 lg:text-left">
-              {count} piece set
-            </p>
-
-            <div className="flex flex-wrap items-start justify-center gap-y-5 lg:justify-start">
-              {combo.items.map((item, i) => (
-                <div key={`${item.product._id}-${i}`} className="flex items-center">
-                  {i > 0 && (
-                    <span className="mx-2 select-none font-saira text-xl font-light text-amber-400/50 sm:mx-3">
-                      +
-                    </span>
-                  )}
-                  <Link
-                    href={`/product-view/${item.product.slug?.current ?? item.product._id}`}
-                    className="block w-[92px] sm:w-[104px]"
-                  >
-                    <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-white/10 bg-gray-900 transition-all duration-500 hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-500/10">
-                      <Image
-                        src={safeImageUrl(item.imageUrl)}
-                        alt={item.product.name}
-                        fill
-                        sizes="104px"
-                        quality={68}
-                        className="object-cover transition-transform duration-700 hover:scale-110"
-                      />
-                      {!item.inStock && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-                          <span className="font-saira text-[9px] font-bold uppercase tracking-wider text-rose-300">
-                            Sold out
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <p className="mt-2 line-clamp-2 text-center font-saira text-[11px] font-semibold leading-tight text-white">
-                      {item.product.name}
-                    </p>
-                    <p className="mt-0.5 text-center font-saira text-[10px] text-amber-400/70">
-                      {item.size ?? "Standard"}
-                    </p>
-                  </Link>
-                </div>
-              ))}
+        <div className="mt-auto pt-6">
+          <div className="flex items-end justify-between gap-4 border-t border-gray-200 pt-5">
+            <div>
+              {combo.savings > 0 && (
+                <p className="text-sm text-gray-400 line-through">{formatLkr(combo.originalTotal)}</p>
+              )}
+              <p className="text-3xl font-black leading-none">{formatLkr(combo.comboPrice)}</p>
             </div>
-          </div>
-
-          {/* Details */}
-          <div className="flex flex-col justify-center p-6 sm:p-8">
-            <h3 className="font-smooch text-2xl font-bold leading-tight text-white sm:text-3xl">
-              {combo.name}
-            </h3>
-            {combo.description && (
-              <p className="mt-2 font-saira text-sm leading-relaxed text-gray-400">
-                {combo.description}
+            {combo.savings > 0 && (
+              <p className="text-right text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+                You save
+                <br />
+                <span className="text-sm">{formatLkr(combo.savings)}</span>
               </p>
             )}
-
-            {combo.freeDelivery && (
-              <div className="mt-4 inline-flex items-center gap-2 self-start rounded-full border border-sky-400/30 bg-sky-400/10 px-3.5 py-1.5">
-                <svg className="h-3.5 w-3.5 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1" />
-                </svg>
-                <span className="font-saira text-[11px] font-bold uppercase tracking-wider text-sky-300">
-                  Free delivery
-                </span>
-              </div>
-            )}
-
-            {/* What you get */}
-            <ul className="mt-5 space-y-1.5 border-t border-white/10 pt-5">
-              {combo.items.map((item, i) => (
-                <li
-                  key={`row-${item.product._id}-${i}`}
-                  className="flex items-baseline gap-2 font-saira text-xs"
-                >
-                  <svg className="mt-0.5 h-3 w-3 shrink-0 text-amber-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="min-w-0 flex-1 truncate text-gray-300">
-                    {item.product.name}
-                    <span className="text-gray-500"> · {item.size ?? "Standard"}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Price */}
-            <div className="mt-5 flex items-end justify-between gap-4 border-t border-white/10 pt-5">
-              <div>
-                <p className="font-saira text-[10px] uppercase tracking-[0.2em] text-gray-500">
-                  Bundle price
-                </p>
-                <div className="mt-1 flex items-baseline gap-2">
-                  <span className="font-saira text-3xl font-bold text-white">
-                    {formatLkr(combo.comboPrice)}
-                  </span>
-                  {combo.savings > 0 && (
-                    <span className="font-saira text-sm text-gray-500 line-through">
-                      {formatLkr(combo.originalTotal)}
-                    </span>
-                  )}
-                </div>
-              </div>
-              {combo.savings > 0 && (
-                <div className="rounded-xl bg-emerald-500/10 px-3 py-2 text-right">
-                  <p className="font-saira text-[10px] uppercase tracking-wider text-emerald-400/70">
-                    You save
-                  </p>
-                  <p className="font-saira text-sm font-bold text-emerald-400">
-                    {formatLkr(combo.savings)}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={handleAdd}
-              disabled={!combo.inStock}
-              className={`mt-5 inline-flex w-full items-center justify-center gap-2.5 rounded-full px-7 py-4 font-saira text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
-                !combo.inStock
-                  ? "cursor-not-allowed bg-white/10 text-gray-500"
-                  : added
-                    ? "bg-emerald-500 text-white"
-                    : "bg-white text-gray-900 hover:bg-amber-300 hover:shadow-lg hover:shadow-amber-500/20"
-              }`}
-            >
-              {!combo.inStock ? (
-                "Currently unavailable"
-              ) : added ? (
-                <>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Added to cart
-                </>
-              ) : (
-                <>
-                  {inCart ? "Add another set" : `Get all ${count} for ${formatLkr(combo.comboPrice)}`}
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </>
-              )}
-            </button>
-
-            <p className="mt-3 text-center font-saira text-[11px] text-gray-500">
-              All {count} products ship together as one bundle
-            </p>
           </div>
+
+          <button
+            onClick={handleAdd}
+            disabled={!combo.inStock}
+            className={`mt-5 inline-flex w-full items-center justify-center gap-2.5 px-6 py-4 text-xs font-bold uppercase tracking-[0.18em] transition-colors ${
+              !combo.inStock
+                ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                : added
+                  ? "bg-emerald-600 text-white"
+                  : "bg-gray-900 text-white hover:bg-primary"
+            }`}
+          >
+            {!combo.inStock ? (
+              "Currently unavailable"
+            ) : added ? (
+              "Added to cart"
+            ) : (
+              <>
+                {inCart ? "Add another set" : "Add bundle to cart"}
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="square" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </>
+            )}
+          </button>
+          <p className="mt-3 text-center text-[11px] text-gray-500">
+            All {count} products ship together as one bundle
+          </p>
         </div>
       </div>
     </div>
@@ -220,9 +171,11 @@ export default function ComboOffers({ combos }: { combos: ResolvedCombo[] }) {
   if (combos.length === 0) return null;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
-      {combos.map((combo) => (
-        <ComboCard key={combo.id} combo={combo} />
+    <div className="space-y-6">
+      {combos.map((combo, index) => (
+        <div key={combo.id} data-reveal>
+          <ComboCard combo={combo} index={index} />
+        </div>
       ))}
     </div>
   );

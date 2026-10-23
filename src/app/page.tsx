@@ -1,8 +1,9 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import FeaturedProducts from "./FeaturedProducts";
-import NewArrivals from "./NewArrivals";
-import BestSellers from "./BestSellers";
+import Image from "next/image";
+import Link from "next/link";
+import ProductGrid, { productCardProps } from "@/components/ProductGrid";
+import SectionHeading from "@/components/SectionHeading";
 import { getCachedProducts } from "@/lib/products-cache";
 import { getCachedBestSellerIds } from "@/lib/best-sellers-cache";
 import ComboOffers from "./ComboOffers";
@@ -36,28 +37,26 @@ export default async function Home() {
   const recentProducts = [...allProducts].sort(
     (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
   );
+  const heroProduct = bestSellers[0] ?? recentProducts[0];
+  const featured = heroProduct ? productCardProps(heroProduct) : null;
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="absolute top-0 left-0 right-0 z-50">
-        <Header currentPage="home" />
-      </div>
-      
-      <main className="flex-grow animate-fade-in-up">
-        {/* Hero Section with Video Background */}
-        <section className="relative w-full h-screen overflow-hidden">
-          {/* Video Background */}
+      <Header currentPage="home" />
+
+      <main className="flex-grow">
+        {/* Hero */}
+        <section className="relative flex min-h-[100svh] w-full flex-col overflow-hidden bg-black">
           {/* Mobile video */}
           <video
             autoPlay
             muted
             loop
             playsInline
-            className="absolute inset-0 w-full h-full object-cover object-left z-0 block sm:hidden transform scale-[1.2]"
-            style={{ objectFit: 'cover', objectPosition: 'left center' }}
+            className="absolute inset-0 block h-full w-full scale-[1.2] object-cover sm:hidden"
+            style={{ objectPosition: "left center" }}
           >
             <source src="/hero-mobile.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
           </video>
           {/* Desktop/tablet video */}
           <video
@@ -65,357 +64,261 @@ export default async function Home() {
             muted
             loop
             playsInline
-            className="absolute inset-0 w-full h-full object-cover z-0 hidden sm:block"
-            style={{ objectFit: 'cover', objectPosition: 'center center' }}
+            className="absolute inset-0 hidden h-full w-full object-cover sm:block"
           >
             <source src="/hero-mobile.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
           </video>
-          
-          {/* Overlay Gradients (subtle dark for readability, no fog) */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/40 z-10"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent z-20"></div>
-          
-          {/* Main Content */}
-          <div className="absolute inset-0 z-30 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-            <div className="max-w-5xl w-full text-center text-white">
-              <div className="animate-fade-in-up">
-                <div className="inline-block mb-6 px-4 py-2 bg-gradient-to-r from-amber-500/20 to-rose-500/20 rounded-full border border-amber-400/30 backdrop-blur-sm">
-                  <span className="text-amber-300 text-sm font-medium tracking-wider uppercase font-saira">Exclusive Imports</span>
+          <div className="absolute inset-0 bg-black/60" />
+
+          {/* Frame lines */}
+          <div className="pointer-events-none absolute inset-y-0 left-[5vw] hidden w-px bg-white/10 lg:block" />
+          <div className="pointer-events-none absolute inset-y-0 right-[5vw] hidden w-px bg-white/10 lg:block" />
+
+          <div className="relative z-10 flex flex-1 items-center px-4 pt-32 pb-12 sm:px-6 lg:px-[10vw]">
+            <div className="grid w-full items-center gap-12 lg:grid-cols-12">
+              <div className="text-white animate-fade-in-up lg:col-span-8">
+                <div className="flex items-center gap-3">
+                  <span className="h-px w-10 bg-primary" />
+                  <p className="eyebrow text-primary">Exclusive Imports &middot; Handcrafted by Yusuf Bhai</p>
                 </div>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-audiowide tracking-wider bg-gradient-to-r from-white via-amber-100 to-rose-100 bg-clip-text text-transparent animate-gradient-x shimmer-text">
-                  Aroma Notes
+                <h1 className="mt-6 text-[2.75rem] font-black uppercase leading-[0.95] tracking-tight sm:text-7xl xl:text-8xl">
+                  Where Every
+                  <span className="text-outline block text-white">Scent Tells</span>
+                  <span className="block">
+                    A Story<span className="text-primary">.</span>
+                  </span>
                 </h1>
-              </div>
-              <div className="animate-fade-in-up delay-300">
-                <p className="mt-6 sm:mt-8 max-w-3xl mx-auto text-base sm:text-lg md:text-xl text-gray-100 leading-relaxed font-saira px-4">
-                  Where every scent tells a story. Discover our exclusive collection of artisanal perfumes, 
-                  each bottle a masterpiece of olfactory artistry.
+                <p className="mt-7 max-w-lg text-sm leading-relaxed text-gray-300 sm:text-base">
+                  Discover Aroma Notes, an exclusive collection of artisanal perfumes. Each bottle a masterpiece
+                  of olfactory artistry, imported to Sri Lanka.
                 </p>
-              </div>
-              <div className="mt-8 sm:mt-12 animate-fade-in-up delay-500">
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <a className="w-full sm:w-auto group inline-block rounded-full bg-gradient-to-r from-amber-500 to-rose-500 px-8 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-bold font-saira text-white shadow-2xl transition-all duration-300 hover:shadow-amber-500/25 hover:shadow-2xl hover:scale-105 hover:-translate-y-1 relative overflow-hidden" href="/products">
-                    <span className="relative z-10 font-saira uppercase">Explore Collection</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                  </a>
-                  <a className="w-full sm:w-auto group inline-block rounded-full border-2 border-amber-400/50 px-8 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold font-saira text-amber-300 hover:bg-amber-400/10 hover:border-amber-400 transition-all duration-300 backdrop-blur-sm" href="#about">
-                    <span className="relative z-8 font-saira uppercase">Our Story</span>
+                <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    className="group inline-flex items-center justify-center gap-3 bg-primary px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white transition-colors hover:bg-white hover:text-gray-900"
+                    href="/products"
+                  >
+                    Explore Collection
+                    <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="square" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </Link>
+                  <a
+                    className="inline-flex items-center justify-center border border-white/40 px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white transition-colors hover:border-white hover:bg-white hover:text-gray-900"
+                    href="#about"
+                  >
+                    Our Story
                   </a>
                 </div>
               </div>
-              
-              {/* Perfume Bottle Icon */}
-              <div className="mt-12 sm:mt-16 animate-bounce-subtle">
-                <div className="inline-block p-3 sm:p-4 bg-gradient-to-b from-amber-500/20 to-rose-500/20 rounded-full border border-amber-400/30 backdrop-blur-sm">
-                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
-                  </svg>
-                </div>
-              </div>
+
+              {/* Featured product */}
+              {featured && (
+                <Link
+                  href={featured.href}
+                  className="group hidden border border-white/20 bg-black/50 text-white transition-colors hover:border-primary lg:col-span-4 lg:block xl:ml-auto xl:w-[320px]"
+                >
+                  <div className="flex items-center justify-between border-b border-white/20 px-4 py-3">
+                    <span className="eyebrow text-primary">Featured</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                      {bestSellers.length > 0 ? "Best Seller" : "New In"}
+                    </span>
+                  </div>
+                  <div className="relative aspect-square overflow-hidden bg-gray-900">
+                    <Image
+                      src={featured.imageSrc}
+                      alt={featured.imageAlt}
+                      fill
+                      sizes="320px"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      priority
+                    />
+                  </div>
+                  <div className="p-4">
+                    {featured.label && <p className="eyebrow text-gray-400">{featured.label}</p>}
+                    <p className="mt-1.5 truncate text-base font-extrabold">{featured.name}</p>
+                    <p className="mt-1 text-sm font-bold text-primary">{featured.price}</p>
+                  </div>
+                  <div className="bg-primary py-3 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-white transition-colors group-hover:bg-white group-hover:text-gray-900">
+                    Shop Now
+                  </div>
+                </Link>
+              )}
             </div>
           </div>
-        </section>
-        
-        {/* Best Sellers Section */}
-        {bestSellers.length > 0 && (
-          <section className="relative overflow-hidden bg-[#0a0a0f] py-20 sm:py-28">
-            {/* Creative background layers */}
-            <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-              {/* Aurora sweep */}
-              <div className="absolute -top-1/3 left-1/2 h-[900px] w-[1400px] -translate-x-1/2 rounded-full bg-[conic-gradient(from_180deg_at_50%_50%,rgba(245,158,11,0.18),rgba(244,63,94,0.14),rgba(168,85,247,0.10),rgba(245,158,11,0.18))] blur-[130px] opacity-70" />
-              {/* Fine grid */}
-              <div
-                className="absolute inset-0 opacity-[0.13]"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(255,255,255,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.35) 1px, transparent 1px)",
-                  backgroundSize: "64px 64px",
-                  maskImage: "radial-gradient(ellipse 75% 60% at 50% 40%, #000 30%, transparent 75%)",
-                  WebkitMaskImage: "radial-gradient(ellipse 75% 60% at 50% 40%, #000 30%, transparent 75%)",
-                }}
-              />
-              {/* Diagonal silk streaks */}
-              <div
-                className="absolute inset-0 opacity-[0.07]"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(115deg, rgba(255,255,255,0.9) 0px, rgba(255,255,255,0.9) 1px, transparent 1px, transparent 26px)",
-                  maskImage: "linear-gradient(to bottom, transparent, #000 35%, #000 65%, transparent)",
-                  WebkitMaskImage: "linear-gradient(to bottom, transparent, #000 35%, #000 65%, transparent)",
-                }}
-              />
-              {/* Corner glows */}
-              <div className="absolute -left-24 top-1/3 h-72 w-72 rounded-full bg-amber-500/20 blur-[110px]" />
-              <div className="absolute -right-24 bottom-1/4 h-80 w-80 rounded-full bg-rose-500/20 blur-[120px]" />
-              {/* Edge fades so it blends with neighbouring sections */}
-              <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-gray-950 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-gray-950 to-transparent" />
-              {/* Hairline accents */}
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-rose-400/30 to-transparent" />
-            </div>
 
-            <div className="relative z-10 mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw]">
-              <div className="mb-16 text-center">
-                <div className="mb-6 inline-flex animate-fade-in-up items-center gap-2 rounded-full border border-amber-400/30 bg-white/5 px-6 py-3 backdrop-blur-sm">
-                  <svg className="h-3.5 w-3.5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M11.48 3.5l2.4 4.87 5.37.78-3.89 3.79.92 5.35-4.8-2.52-4.8 2.52.92-5.35-3.89-3.79 5.37-.78 2.4-4.87z" />
-                  </svg>
-                  <span className="font-saira text-sm font-medium uppercase tracking-wider text-amber-400">
-                    Customer Favourites
-                  </span>
+          {/* Info bar */}
+          <div className="relative z-10 border-t border-white/15 bg-black/60">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:mx-[10vw] lg:border-x lg:border-white/15">
+            {[
+              { title: "100% Authentic", text: "Direct from Yusuf Bhai" },
+              { title: "Handcrafted", text: "Premium oils, small batches" },
+              { title: "Pay in 4", text: "Interest free with Payzy" },
+              { title: "Personal Support", text: "Chat with us on WhatsApp" },
+            ].map((item, i) => (
+              <div
+                key={item.title}
+                className={`flex items-start gap-3 border-white/15 px-4 py-4 sm:px-6 sm:py-5 ${i % 2 === 0 ? "border-r" : ""} ${
+                  i < 2 ? "border-b md:border-b-0" : ""
+                } ${i === 1 ? "md:border-r" : ""}`}
+              >
+                <span className="text-[10px] font-black text-primary">0{i + 1}</span>
+                <div>
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-white sm:text-xs">{item.title}</p>
+                  <p className="mt-1 text-[11px] text-gray-400 sm:text-xs">{item.text}</p>
                 </div>
-                <h2 className="mb-6 animate-fade-in-up font-smooch text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                  Best{" "}
-                  <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-rose-400 bg-clip-text text-transparent">
-                    Sellers
-                  </span>
-                </h2>
-                <p className="mx-auto max-w-3xl animate-fade-in-up font-saira text-lg leading-relaxed text-gray-400 delay-300">
-                  The scents our customers keep coming back for, ranked by what&apos;s flying off the shelves.
-                </p>
-                <div className="mx-auto mt-8 h-1 w-32 animate-fade-in-up rounded-full bg-gradient-to-r from-amber-500 to-rose-500 delay-500" />
               </div>
+            ))}
+          </div>
+          </div>
+        </section>
 
-              <BestSellers products={bestSellers} />
+        {/* Best Sellers */}
+        {bestSellers.length > 0 && (
+          <section id="best-sellers" className="scroll-mt-24 bg-[#0a0a0f] py-16 sm:py-20">
+            <div className="mx-auto px-4 sm:px-6 lg:px-[10vw]">
+              <SectionHeading
+                tone="dark"
+                index="01"
+                eyebrow="Customer Favourites"
+                title="Best Sellers"
+                description="The scents our customers keep coming back for."
+                action={{ href: "/products", label: "Shop All" }}
+              />
+              <ProductGrid products={bestSellers} />
             </div>
           </section>
         )}
 
-        {/* New Arrivals Section */}
-        <section className="py-20 sm:py-28 bg-gray-950 relative overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-0 left-1/4 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl" />
-          </div>
-          <div className="mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw] relative z-10">
-            <div className="text-center mb-16">
-              <div className="inline-block mb-6 px-6 py-3 bg-white/5 rounded-full border border-white/10 backdrop-blur-sm">
-                <span className="text-amber-400 text-sm font-medium tracking-wider uppercase font-saira">Just Dropped</span>
-              </div>
-              <h2 className="text-4xl font-bold font-smooch tracking-tight text-white sm:text-5xl lg:text-6xl mb-6 animate-fade-in-up">
-                New Arrivals
-              </h2>
-              <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed font-saira animate-fade-in-up delay-300">
-                Be the first to experience our latest additions — freshly curated scents that redefine elegance.
-              </p>
-              <div className="w-32 h-1 bg-gradient-to-r from-amber-500 to-rose-500 mx-auto rounded-full mt-8 animate-fade-in-up delay-500" />
-            </div>
-
-            <NewArrivals products={recentProducts.slice(0, 4)} />
-
-            <div className="text-center mt-16 animate-fade-in-up delay-700">
-              <a
-                className="group inline-block rounded-full bg-white/5 border border-white/10 px-8 py-4 text-lg font-semibold text-amber-400 hover:bg-white/10 hover:border-amber-400/30 transition-all duration-300 backdrop-blur-sm font-saira"
-                href="/products"
-              >
-                <span className="uppercase">Shop All New</span>
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* Combo Offers Section */}
-        {combos.length > 0 && (
-          <section className="relative overflow-hidden bg-[#08080c] py-20 sm:py-28">
-            {/* Creative backdrop */}
-            <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-              {/* Overhead spotlight */}
-              <div className="absolute -top-40 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.22),transparent_65%)] blur-2xl" />
-              {/* Crossing ribbons */}
-              <div className="absolute -left-1/4 top-1/3 h-40 w-[150%] -rotate-6 bg-gradient-to-r from-transparent via-rose-500/[0.07] to-transparent blur-2xl" />
-              <div className="absolute -left-1/4 top-1/2 h-32 w-[150%] rotate-3 bg-gradient-to-r from-transparent via-amber-500/[0.07] to-transparent blur-2xl" />
-              {/* Dot field */}
-              <div
-                className="absolute inset-0 opacity-[0.18]"
-                style={{
-                  backgroundImage: "radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)",
-                  backgroundSize: "26px 26px",
-                  maskImage: "radial-gradient(ellipse 70% 55% at 50% 45%, #000 20%, transparent 78%)",
-                  WebkitMaskImage: "radial-gradient(ellipse 70% 55% at 50% 45%, #000 20%, transparent 78%)",
-                }}
+        {/* New Arrivals */}
+        {recentProducts.length > 0 && (
+          <section id="new-arrivals" className="scroll-mt-24 border-t border-white/10 bg-gray-950 py-16 sm:py-20">
+            <div className="mx-auto px-4 sm:px-6 lg:px-[10vw]">
+              <SectionHeading
+                tone="dark"
+                index="02"
+                eyebrow="Just Dropped"
+                title="New Arrivals"
+                description="Our latest additions, freshly curated scents that redefine elegance."
+                action={{ href: "/products", label: "Shop All New" }}
               />
-              <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-gray-950 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-gray-950 to-transparent" />
+              <ProductGrid products={recentProducts.slice(0, 5)} priorityCount={5} />
             </div>
+          </section>
+        )}
 
-            {/* Ticker strip */}
-            <div className="relative mb-14 flex overflow-hidden border-y border-white/10 bg-white/[0.03] py-3 select-none">
-              <div className="animate-combo-marquee flex shrink-0 items-center gap-8 pr-8">
-                {Array.from({ length: 2 }).map((_, loop) => (
-                  <div key={loop} className="flex shrink-0 items-center gap-8">
-                    {["Buy Together", "Pay Less", "Layer Like A Pro", "Curated Pairings", "Limited Bundles"].map((word, i) => (
-                      <span key={`${loop}-${i}`} className="flex shrink-0 items-center gap-8">
-                        <span className="font-saira text-xs font-semibold uppercase tracking-[0.35em] text-amber-400/70">
-                          {word}
-                        </span>
-                        <span className="h-1 w-1 shrink-0 rounded-full bg-rose-400/50" />
-                      </span>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative z-10 mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw]">
-              <div className="mb-16 text-center">
-                <div className="mb-6 inline-flex animate-fade-in-up items-center gap-2 rounded-full border border-amber-400/30 bg-white/5 px-6 py-3 backdrop-blur-sm">
-                  <svg className="h-3.5 w-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21" />
-                  </svg>
-                  <span className="font-saira text-sm font-medium uppercase tracking-wider text-amber-400">
-                    Layering Combos
-                  </span>
-                </div>
-                <h2 className="mb-6 animate-fade-in-up font-smooch text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                  Better{" "}
-                  <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-rose-400 bg-clip-text text-transparent">
-                    Together
-                  </span>
-                </h2>
-                <p className="mx-auto max-w-3xl animate-fade-in-up font-saira text-lg leading-relaxed text-gray-400 delay-300">
-                  Hand picked pairings at one bundle price. Same vibe, now yours.
-                </p>
-                <div className="mx-auto mt-8 h-1 w-32 animate-fade-in-up rounded-full bg-gradient-to-r from-amber-500 to-rose-500 delay-500" />
-              </div>
-
+        {/* Combo Offers */}
+        {combos.length > 0 && (
+          <section className="relative overflow-hidden border-t border-white/10 bg-[#0a0a0f] py-16 sm:py-20">
+            <p
+              className="text-outline pointer-events-none absolute -right-4 top-10 select-none whitespace-nowrap text-[7rem] font-black uppercase leading-none text-white/[0.07] sm:text-[11rem]"
+              aria-hidden
+            >
+              Together
+            </p>
+            <div className="relative mx-auto px-4 sm:px-6 lg:px-[10vw]">
+              <SectionHeading
+                tone="dark"
+                index="03"
+                eyebrow="Layering Combos"
+                title={<>Better <span className="text-primary">Together</span></>}
+                description="Hand picked pairings at one bundle price. Layer them like a pro and pay less."
+              />
               <ComboOffers combos={combos} />
             </div>
           </section>
         )}
 
-        {/* Cinematic Video Section */}
-        <section className="relative w-full h-[60vh] sm:h-[70vh] overflow-hidden">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-          >
+        {/* Cinematic Video */}
+        <section className="relative h-[60vh] w-full overflow-hidden bg-black sm:h-[70vh]">
+          <video autoPlay muted loop playsInline className="absolute inset-0 h-full w-full object-cover">
             <source src="/c8262ad0dea54c6b8003d869c20730e8.HD-1080p-7.2Mbps-45963023.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-black/40 to-white z-10" />
-          <div className="absolute inset-0 z-20 flex items-center justify-center px-4">
-            <div className="text-center max-w-3xl">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-smooch text-white drop-shadow-lg mb-4">
-                Crafted for the Bold
+          <div className="absolute inset-0 bg-black/55" />
+          <div className="relative z-10 flex h-full items-center px-4 sm:px-6 lg:px-[10vw]">
+            <div data-reveal className="max-w-2xl border-l-2 border-primary pl-6 sm:pl-10">
+              <p className="eyebrow text-primary">Signature Scents</p>
+              <h2 className="mt-5 text-4xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-6xl">
+                Crafted
+                <span className="text-outline block">for the Bold</span>
               </h2>
-              <p className="text-base sm:text-lg text-gray-200 font-saira leading-relaxed drop-shadow-md">
+              <p className="mt-5 text-base leading-relaxed text-gray-300 sm:text-lg">
                 Every drop is a statement. Experience luxury that lingers.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Featured Collection Section — Light Creative */}
-        <section id="products" className="relative py-20 sm:py-32 bg-gradient-to-b from-white via-gray-50/80 to-white overflow-hidden">
-          {/* Soft ambient orbs */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute -top-20 -right-20 w-[500px] h-[500px] bg-amber-100/40 rounded-full blur-[120px]" />
-            <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] bg-rose-100/30 rounded-full blur-[120px]" />
-          </div>
-
-          <div className="relative z-10 mx-auto max-w-none px-4 sm:px-6 lg:px-[5vw]">
-            {/* Section header */}
-            <div className="text-center mb-16 sm:mb-20">
-              <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full border border-amber-200/60 bg-amber-50/60 backdrop-blur-sm animate-fade-in-up">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-amber-700 text-[11px] font-semibold tracking-[0.25em] uppercase font-saira">Signature Collection</span>
-              </div>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-smooch text-gray-900 leading-[1.1] mb-6 animate-fade-in-up delay-200">
-                Masterpiece{" "}
-                <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-rose-500 bg-clip-text text-transparent">Fragrances</span>
-              </h2>
-              <p className="max-w-2xl mx-auto text-base sm:text-lg text-gray-500 leading-relaxed font-saira animate-fade-in-up delay-300">
-                Each fragrance is a carefully crafted symphony of notes, designed to evoke emotions and create lasting memories.
-              </p>
-              <div className="w-20 h-0.5 bg-gradient-to-r from-amber-400 to-rose-400 mx-auto rounded-full mt-8 animate-fade-in-up delay-500" />
-            </div>
-            
-            {/* Featured Products from DB */}
-            <FeaturedProducts products={recentProducts.slice(0, 8)} />
-            
-            {/* Call to Action */}
-            <div className="text-center mt-16 sm:mt-20 animate-fade-in-up delay-700">
-              <a
-                className="group inline-flex items-center gap-3 rounded-full bg-gray-900 px-8 py-4 text-sm font-bold font-saira text-white uppercase tracking-wider transition-all duration-300 hover:bg-gray-800 hover:shadow-xl hover:-translate-y-0.5"
-                href="/products"
-              >
-                View All Fragrances
-                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-            </div>
+        {/* Featured Collection */}
+        <section id="products" className="bg-white py-16 sm:py-20">
+          <div className="mx-auto px-4 sm:px-6 lg:px-[10vw]">
+            <SectionHeading
+              index="04"
+              eyebrow="Signature Collection"
+              title="Masterpiece Fragrances"
+              description="Each fragrance is a carefully crafted composition of notes, designed to evoke emotion and create lasting memories."
+              action={{ href: "/products", label: "View All" }}
+            />
+            <ProductGrid products={recentProducts.slice(0, 10)} />
           </div>
         </section>
-        
-        {/* About Section — Single Immersive Image */}
-        <section id="about" className="relative min-h-[85vh] sm:min-h-[90vh] overflow-hidden">
-          {/* Background image */}
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/forhimafter.webp')" }}
-          />
-          {/* Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/20 to-transparent h-32 sm:h-40" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/20 sm:from-black/80 sm:via-black/40 sm:to-transparent" />
-          <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-white to-transparent" />
 
-          {/* Content */}
-          <div className="relative z-10 mx-auto max-w-none px-5 sm:px-6 lg:px-[5vw] flex items-center min-h-[85vh] sm:min-h-[90vh]">
-            <div className="max-w-md sm:max-w-lg py-20">
-              {/* Tag */}
-              <div className="inline-flex items-center gap-2 mb-6 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                <span className="text-amber-300 text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] uppercase font-saira">Our Craft</span>
+        {/* About */}
+        <section id="about" className="scroll-mt-24 border-t border-gray-200 bg-white">
+          <div className="grid lg:grid-cols-2">
+            <div className="relative min-h-[360px] sm:min-h-[480px]">
+              <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: "url('/forhimafter.webp')" }}
+                role="img"
+                aria-label="Aroma Notes fragrance"
+              />
+            </div>
+            <div className="flex items-center bg-gray-950 px-6 py-16 sm:px-12 lg:px-16">
+              <div data-reveal className="max-w-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-black text-primary">05</span>
+                  <span className="h-px w-10 bg-primary" />
+                  <span className="eyebrow text-gray-400">Our Craft</span>
+                </div>
+                <h2 className="mt-5 text-4xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-5xl">
+                  The Art of
+                  <span className="text-outline block">Perfumery</span>
+                </h2>
+                <p className="mt-6 text-base leading-relaxed text-gray-400">
+                  Fragrance is more than a scent. It is an expression of personality, a memory in a bottle,
+                  and a journey of the senses. We blend tradition with innovation to craft unforgettable experiences.
+                </p>
+                <div className="mt-8 grid grid-cols-2 border-l border-t border-white/15">
+                  {[
+                    "Hand Selected Ingredients",
+                    "Small Batch Production",
+                    "Ethically Sourced",
+                    "100% Authentic",
+                  ].map((tag) => (
+                    <div
+                      key={tag}
+                      className="flex items-center gap-2.5 border-b border-r border-white/15 px-4 py-4 text-[11px] font-bold uppercase tracking-[0.12em] text-gray-200"
+                    >
+                      <span className="h-1.5 w-1.5 shrink-0 bg-primary" />
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  href="/about"
+                  className="group mt-10 inline-flex items-center gap-3 bg-primary px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white transition-colors hover:bg-white hover:text-gray-900"
+                >
+                  Learn More
+                  <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="square" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </Link>
               </div>
-
-              {/* Heading */}
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-smooch text-white leading-[1.1] mb-5">
-                The Art of{" "}
-                <span className="bg-gradient-to-r from-amber-400 via-orange-300 to-rose-400 bg-clip-text text-transparent">Perfumery</span>
-              </h2>
-
-              {/* Body */}
-              <p className="text-sm sm:text-base text-gray-300 leading-relaxed font-saira mb-8">
-                Fragrance is more than just a scent — it&apos;s an expression of personality, a memory in a bottle,
-                and a journey of the senses. We blend tradition with innovation to craft unforgettable experiences.
-              </p>
-
-              {/* Feature pills */}
-              <div className="flex flex-wrap gap-2 sm:gap-3 mb-10">
-                {[
-                  "Hand-Selected Ingredients",
-                  "Small-Batch Production",
-                  "Ethically Sourced",
-                  "100% Authentic",
-                ].map((tag) => (
-                  <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-[10px] sm:text-xs font-medium text-gray-300 font-saira">
-                    <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-amber-400" />
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* CTA */}
-              <a
-                href="/products"
-                className="group inline-flex items-center gap-3 rounded-full bg-white px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm font-bold font-saira text-gray-900 uppercase tracking-wider transition-all duration-300 hover:bg-amber-50 hover:shadow-2xl hover:shadow-amber-500/10 hover:-translate-y-0.5"
-              >
-                Explore Collection
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
             </div>
           </div>
         </section>
       </main>
-      
+
       <Footer />
     </div>
   );

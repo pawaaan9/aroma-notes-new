@@ -1,41 +1,41 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins, Smooch_Sans, Saira, Exo_2, Audiowide } from "next/font/google";
+import { Mulish, Poppins, Smooch_Sans, Saira } from "next/font/google";
 import SplashScreen from "@/components/SplashScreen";
 import CartDrawer from "@/components/CartDrawer";
 import MetaPixel from "@/components/MetaPixel";
+import ScrollReveal from "@/components/ScrollReveal";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 import { CartDrawerProvider } from "@/contexts/CartDrawerContext";
 
+const mulish = Mulish({
+  variable: "--font-mulish",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+// Admin panel typefaces, loaded on demand only
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
   weight: ["100","200","300","400","500","600","700","800","900"],
   style: ["normal","italic"],
+  preload: false,
 });
 
 const smooch = Smooch_Sans({
   variable: "--font-smooch",
   subsets: ["latin"],
   weight: ["100","200","300","400","500","600","700","800","900"],
+  preload: false,
 });
 
 const saira = Saira({
   variable: "--font-saira",
   subsets: ["latin"],
   weight: ["100","200","300","400","500","600","700","800","900"],
-});
-
-const exo2 = Exo_2({
-  variable: "--font-exo2",
-  subsets: ["latin"],
-  weight: ["100","200","300","400","500","600","700","800","900"],
-});
-
-const audiowide = Audiowide({
-  variable: "--font-audiowide",
-  subsets: ["latin"],
-  weight: "400",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -119,32 +119,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth" className={`${mulish.variable} ${poppins.variable} ${smooch.variable} ${saira.variable}`}>
       <head>
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
       </head>
       <body
-        className={`${poppins.variable} ${smooch.variable} ${saira.variable} ${exo2.variable} ${audiowide.variable} bg-white font-sans text-gray-900 antialiased bg-perfume-gradient bg-perfume-paper bg-perfume-vignette`}
+        className="bg-white font-sans text-gray-900 antialiased"
       >
         <MetaPixel />
-        {/* Floating sparkles layer */}
-        <div className="perfume-sparkles" aria-hidden>
-          <span className="dot" style={{ left: '10%', bottom: '5%' }} />
-          <span className="dot alt" style={{ left: '30%', bottom: '10%' }} />
-          <span className="dot" style={{ left: '55%', bottom: '0%' }} />
-          <span className="dot alt" style={{ left: '75%', bottom: '12%' }} />
-          <span className="dot" style={{ left: '90%', bottom: '8%' }} />
-        </div>
-        <div className="relative z-10">
-          <CartProvider>
-            <CartDrawerProvider>
-              <SplashScreen />
-              {children}
-              <CartDrawer />
-            </CartDrawerProvider>
-          </CartProvider>
-        </div>
+        <ScrollReveal />
+        <CartProvider>
+          <CartDrawerProvider>
+            <SplashScreen />
+            {children}
+            <CartDrawer />
+          </CartDrawerProvider>
+        </CartProvider>
       </body>
     </html>
   );

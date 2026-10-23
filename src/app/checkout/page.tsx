@@ -13,7 +13,7 @@ import { upsertCustomerFromOrder } from "@/lib/customers";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/meta-pixel-events";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
-import payzyLogo from "@/assets/payzy logo.jpg";
+import payzyLogo from "@/assets/payzy-wide.png";
 import { safeImageUrl } from "@/utils/image";
 
 type FormData = {
@@ -440,10 +440,10 @@ export default function CheckoutPage() {
         <div className="absolute top-0 left-0 right-0 z-50">
           <Header currentPage="products" />
         </div>
-        <main className="flex flex-1 items-center justify-center bg-white px-4 pt-24 pb-16">
+        <main className="flex flex-1 items-center justify-center bg-white px-4 pt-32 pb-16">
           <div className="mx-auto max-w-md text-center">
             {/* Success icon */}
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center bg-green-100">
               <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
@@ -456,7 +456,7 @@ export default function CheckoutPage() {
               Thank you for your order. We&apos;ll process it right away.
             </p>
 
-            <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5">
+            <div className="mt-6 border border-gray-200 bg-gray-50 p-5">
               <p className="text-sm text-gray-500 font-saira">Order Number</p>
               <p className="mt-1 text-xl font-bold text-primary font-saira">
                 {orderPlaced.orderNumber}
@@ -490,13 +490,13 @@ export default function CheckoutPage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/products"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-saira font-semibold text-white transition-all hover:bg-primary/90"
+                className="inline-flex items-center justify-center gap-2 bg-primary px-6 py-3 font-saira font-semibold text-white transition-all hover:bg-primary/90"
               >
                 Continue Shopping
               </Link>
               <Link
                 href="/"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-saira font-medium text-gray-700 transition-all hover:bg-gray-100"
+                className="inline-flex items-center justify-center gap-2 border border-gray-300 px-6 py-3 font-saira font-medium text-gray-700 transition-all hover:bg-gray-100"
               >
                 Back to Home
               </Link>
@@ -515,9 +515,9 @@ export default function CheckoutPage() {
         <div className="absolute top-0 left-0 right-0 z-50">
           <Header currentPage="products" />
         </div>
-        <main className="flex flex-1 items-center justify-center bg-white px-4 pt-24 pb-16">
+        <main className="flex flex-1 items-center justify-center bg-white px-4 pt-32 pb-16">
           <div className="text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center bg-gray-100">
               <svg className="h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
               </svg>
@@ -528,7 +528,7 @@ export default function CheckoutPage() {
             </p>
             <Link
               href="/products"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-saira font-semibold text-white transition-all hover:bg-primary/90"
+              className="mt-6 inline-flex items-center gap-2 bg-primary px-6 py-3 font-saira font-semibold text-white transition-all hover:bg-primary/90"
             >
               Browse Products
             </Link>
@@ -546,7 +546,7 @@ export default function CheckoutPage() {
         <Header currentPage="products" />
       </div>
 
-      <main className="flex-grow bg-white pt-24 pb-16">
+      <main className="flex-grow bg-white pt-32 pb-16">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           {/* Back to cart link */}
           <Link
@@ -559,14 +559,14 @@ export default function CheckoutPage() {
             Back to Cart
           </Link>
 
-          <h1 className="mb-8 text-3xl font-bold text-gray-900 font-saira">Checkout</h1>
+          <h1 className="mb-8 text-3xl font-extrabold uppercase tracking-[0.06em] text-gray-900">Checkout</h1>
 
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               {/* Customer details form */}
               <div className="lg:col-span-2 space-y-6">
-                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-5 text-lg font-bold text-gray-900 font-saira">
+                <div className="border border-gray-200 bg-white p-6 shadow-sm">
+                  <h2 className="mb-5 text-sm font-extrabold uppercase tracking-[0.18em] text-gray-900">
                     Customer Details
                   </h2>
 
@@ -584,7 +584,7 @@ export default function CheckoutPage() {
                         placeholder="John"
                         autoComplete="given-name"
                         maxLength={50}
-                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                        className={`w-full border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.firstName
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
                             : "border-gray-300 focus:border-primary focus:ring-primary/20"
@@ -608,7 +608,7 @@ export default function CheckoutPage() {
                         placeholder="Perera"
                         autoComplete="family-name"
                         maxLength={50}
-                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                        className={`w-full border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.lastName
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
                             : "border-gray-300 focus:border-primary focus:ring-primary/20"
@@ -633,7 +633,7 @@ export default function CheckoutPage() {
                         autoComplete="tel"
                         inputMode="tel"
                         maxLength={15}
-                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                        className={`w-full border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.phone
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
                             : "border-gray-300 focus:border-primary focus:ring-primary/20"
@@ -658,7 +658,7 @@ export default function CheckoutPage() {
                         autoComplete="email"
                         inputMode="email"
                         maxLength={100}
-                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                        className={`w-full border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.email
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
                             : "border-gray-300 focus:border-primary focus:ring-primary/20"
@@ -682,7 +682,7 @@ export default function CheckoutPage() {
                         placeholder="123, Temple Road, Dehiwala"
                         autoComplete="street-address"
                         maxLength={200}
-                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                        className={`w-full border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.address
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
                             : "border-gray-300 focus:border-primary focus:ring-primary/20"
@@ -706,7 +706,7 @@ export default function CheckoutPage() {
                         placeholder="Colombo"
                         autoComplete="address-level2"
                         maxLength={50}
-                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                        className={`w-full border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.city
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
                             : "border-gray-300 focus:border-primary focus:ring-primary/20"
@@ -727,7 +727,7 @@ export default function CheckoutPage() {
                           name="state"
                           value={form.state}
                           onChange={handleChange}
-                          className={`w-full appearance-none rounded-lg border bg-white px-4 py-2.5 pr-10 text-sm text-gray-900 outline-none transition-all font-saira focus:ring-2 ${
+                          className={`w-full appearance-none border bg-white px-4 py-2.5 pr-10 text-sm text-gray-900 outline-none transition-all font-saira focus:ring-2 ${
                             errors.state
                               ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
                               : "border-gray-300 focus:border-primary focus:ring-primary/20"
@@ -769,7 +769,7 @@ export default function CheckoutPage() {
                         autoComplete="postal-code"
                         inputMode="numeric"
                         maxLength={5}
-                        className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
+                        className={`w-full border px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:ring-2 ${
                           errors.zip
                             ? "border-rose-400 focus:border-rose-500 focus:ring-rose-200"
                             : "border-gray-300 focus:border-primary focus:ring-primary/20"
@@ -791,15 +791,15 @@ export default function CheckoutPage() {
                         onChange={handleChange}
                         rows={3}
                         placeholder="Any special instructions for your order..."
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+                        className="w-full border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all font-saira placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Payment method selection */}
-                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-lg font-bold text-gray-900 font-saira">
+                <div className="border border-gray-200 bg-white p-6 shadow-sm">
+                  <h2 className="mb-4 text-sm font-extrabold uppercase tracking-[0.18em] text-gray-900">
                     Payment Method
                   </h2>
 
@@ -808,20 +808,20 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("cod")}
-                      className={`flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-all ${
+                      className={`flex w-full items-center gap-3 border p-4 text-left transition-all ${
                         paymentMethod === "cod"
                           ? "border-primary bg-primary/5 ring-2 ring-primary/20"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                       }`}
                     >
-                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 ${
                         paymentMethod === "cod" ? "border-primary" : "border-gray-300"
                       }`}>
                         {paymentMethod === "cod" && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                          <div className="h-2.5 w-2.5 bg-primary" />
                         )}
                       </div>
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-amber-100">
                         <svg className="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                         </svg>
@@ -838,20 +838,20 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("bank_deposit")}
-                      className={`flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-all ${
+                      className={`flex w-full items-center gap-3 border p-4 text-left transition-all ${
                         paymentMethod === "bank_deposit"
                           ? "border-primary bg-primary/5 ring-2 ring-primary/20"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                       }`}
                     >
-                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 ${
                         paymentMethod === "bank_deposit" ? "border-primary" : "border-gray-300"
                       }`}>
                         {paymentMethod === "bank_deposit" && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                          <div className="h-2.5 w-2.5 bg-primary" />
                         )}
                       </div>
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-blue-100">
                         <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
                         </svg>
@@ -867,27 +867,21 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("payzy")}
-                      className={`flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-all ${
+                      className={`flex w-full items-center gap-3 border p-4 text-left transition-all ${
                         paymentMethod === "payzy"
                           ? "border-primary bg-primary/5 ring-2 ring-primary/20"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                       }`}
                     >
-                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 ${
                         paymentMethod === "payzy" ? "border-primary" : "border-gray-300"
                       }`}>
                         {paymentMethod === "payzy" && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                          <div className="h-2.5 w-2.5 bg-primary" />
                         )}
                       </div>
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-purple-200 bg-white">
-                        <Image
-                          src={payzyLogo}
-                          alt="Payzy"
-                          width={28}
-                          height={28}
-                          className="object-contain"
-                        />
+                      <div className="flex h-10 w-14 shrink-0 items-center justify-center border border-gray-200 bg-white px-1.5">
+                        <Image src={payzyLogo} alt="Payzy" className="h-auto w-full" />
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 font-saira">Payzy</p>
@@ -900,50 +894,37 @@ export default function CheckoutPage() {
 
                   {/* Payzy installment plans (shown when payzy selected) */}
                   {paymentMethod === "payzy" && (
-                    <div className="mt-4">
-                      <div className="overflow-hidden rounded-xl border border-sky-200">
-                        <div className="bg-gradient-to-r from-sky-500 to-cyan-500 px-5 py-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Image src={payzyLogo} alt="Payzy" width={20} height={20} className="rounded-sm" />
-                              <h3 className="text-sm font-bold text-white font-saira">Payzy – Buy Now, Pay Later</h3>
-                            </div>
-                            <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-bold text-white font-saira">
-                              {formatLkr(grandTotal)}
-                            </span>
-                          </div>
+                    <div className="mt-4 border border-gray-200">
+                      <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <Image src={payzyLogo} alt="Payzy" className="h-6 w-auto shrink-0" />
+                          <span className="h-5 w-px bg-gray-300" />
+                          <h3 className="truncate text-sm font-bold text-gray-900">Installments</h3>
                         </div>
-                        <div className="bg-white p-4">
-                          <p className="mb-3 text-xs font-medium text-gray-500 font-saira uppercase tracking-wider">Choose a plan on Payzy</p>
-                          <div className="grid grid-cols-3 gap-2">
-                            {[2, 3, 4].map((months) => (
-                              <div
-                                key={months}
-                                className="rounded-lg border border-sky-100 bg-sky-50/60 px-2 py-2.5 text-center transition-colors hover:border-sky-300 hover:bg-sky-50"
-                              >
-                                <p className="text-[10px] font-medium text-sky-500 font-saira uppercase tracking-wider">
-                                  {months} Months
-                                </p>
-                                <p className="mt-1 font-saira leading-tight">
-                                  <span className="text-sm sm:text-lg font-bold text-sky-700">{formatLkr(Math.ceil(grandTotal / months))}</span>
-                                  <span className="text-[9px] sm:text-[10px] text-gray-400">/mo</span>
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="mt-3 flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
-                            <span className="text-xs text-gray-500 font-saira">Or pay full amount</span>
-                            <span className="text-sm font-bold text-gray-900 font-saira">{formatLkr(grandTotal)}</span>
-                          </div>
-                        </div>
-                        <div className="bg-sky-50 px-5 py-2.5 border-t border-sky-100">
-                          <p className="flex items-start gap-2 text-xs text-sky-700 font-saira">
-                            <svg className="h-3.5 w-3.5 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                            </svg>
-                            You&apos;ll be redirected to Payzy to select your preferred plan and complete payment.
-                          </p>
-                        </div>
+                        <span className="shrink-0 text-sm font-black text-gray-900">{formatLkr(grandTotal)}</span>
+                      </div>
+                      <div className="p-4">
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">Available plans</p>
+                        <ul className="divide-y divide-gray-100 border border-gray-200">
+                          {[2, 3, 4].map((months) => (
+                            <li key={months} className="flex items-center justify-between gap-3 px-3 py-3">
+                              <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                                <span className="h-1.5 w-1.5 bg-primary" />
+                                {months} months
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                <span className="font-bold text-gray-900">{formatLkr(Math.ceil(grandTotal / months))}</span> / month
+                              </span>
+                            </li>
+                          ))}
+                          <li className="flex items-center justify-between gap-3 bg-gray-50 px-3 py-3">
+                            <span className="text-sm text-gray-500">Or pay in full</span>
+                            <span className="text-sm font-bold text-gray-900">{formatLkr(grandTotal)}</span>
+                          </li>
+                        </ul>
+                        <p className="mt-3 text-xs leading-relaxed text-gray-500">
+                          You&apos;ll be redirected to Payzy to choose your plan and complete payment.
+                        </p>
                       </div>
                     </div>
                   )}
@@ -952,9 +933,9 @@ export default function CheckoutPage() {
                   {paymentMethod === "bank_deposit" && (
                     <div className="mt-4 space-y-4">
                       {/* Bank details card */}
-                      <div className="overflow-hidden rounded-xl border border-gray-200">
+                      <div className="overflow-hidden border border-gray-200">
                         {/* Card header */}
-                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3">
+                        <div className="bg-blue-700 px-5 py-3">
                           <div className="flex items-center gap-2">
                             <svg className="h-4 w-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
@@ -1001,7 +982,7 @@ export default function CheckoutPage() {
                         {!slipFile ? (
                           <div
                             onClick={() => fileInputRef.current?.click()}
-                            className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+                            className={`cursor-pointer border-2 border-dashed p-6 text-center transition-colors ${
                               slipError
                                 ? "border-rose-300 bg-rose-50"
                                 : "border-gray-300 bg-gray-50 hover:border-primary hover:bg-primary/5"
@@ -1018,9 +999,9 @@ export default function CheckoutPage() {
                             </p>
                           </div>
                         ) : (
-                          <div className="relative rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <div className="relative border border-gray-200 bg-gray-50 p-3">
                             <div className="flex items-center gap-3">
-                              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-gray-200">
+                              <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-gray-200">
                                 {slipPreview && (
                                   <Image
                                     src={slipPreview}
@@ -1048,7 +1029,7 @@ export default function CheckoutPage() {
                               <button
                                 type="button"
                                 onClick={removeSlip}
-                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-200 hover:text-rose-600"
+                                className="flex h-8 w-8 shrink-0 items-center justify-center text-gray-400 transition-colors hover:bg-gray-200 hover:text-rose-600"
                                 aria-label="Remove slip"
                               >
                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -1077,14 +1058,14 @@ export default function CheckoutPage() {
 
               {/* Order summary sidebar */}
               <div className="lg:col-span-1">
-                <div className="sticky top-28 rounded-xl border border-gray-200 bg-gray-50 p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-gray-900 font-saira">Order Summary</h2>
+                <div className="sticky top-28 border border-gray-200 bg-gray-50 p-6 shadow-sm">
+                  <h2 className="text-sm font-extrabold uppercase tracking-[0.18em] text-gray-900">Order Summary</h2>
 
                   {/* Items preview */}
                   <div className="mt-4 max-h-64 space-y-3 overflow-auto pr-1">
                     {items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden bg-gray-100 border border-gray-200">
                           {item.imageUrl ? (
                             <Image
                               src={safeImageUrl(item.imageUrl)}
@@ -1131,7 +1112,7 @@ export default function CheckoutPage() {
                           <span className="font-medium text-gray-900">{formatLkr(deliveryFee)}</span>
                         )
                       ) : (
-                        <span className="inline-block h-4 w-16 animate-pulse rounded bg-gray-200" />
+                        <span className="inline-block h-4 w-16 animate-pulse bg-gray-200" />
                       )}
                     </div>
                     <div className="border-t border-gray-200 pt-3">
@@ -1142,7 +1123,7 @@ export default function CheckoutPage() {
                             {formatLkr(grandTotal)}
                           </span>
                         ) : (
-                          <span className="inline-block h-5 w-20 animate-pulse rounded bg-gray-200" />
+                          <span className="inline-block h-5 w-20 animate-pulse bg-gray-200" />
                         )}
                       </div>
                     </div>
@@ -1152,7 +1133,7 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-saira font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="mt-6 flex w-full items-center justify-center gap-2 bg-primary py-3.5 font-saira font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {submitting ? (
                       <>

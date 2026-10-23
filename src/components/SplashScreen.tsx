@@ -11,7 +11,7 @@ export default function SplashScreen() {
 
   const isAdmin = pathname.startsWith("/an-admin");
 
-  // One short splash on first paint only — not on every client navigation (that blocked content & delayed images).
+  // One short splash on first paint only, not on every client navigation (that blocked content & delayed images).
   useEffect(() => {
     if (isAdmin) {
       setVisible(false);
@@ -26,30 +26,15 @@ export default function SplashScreen() {
   if (isAdmin || !visible) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden">
-      {/* Static scenic background */}
-      <div className="absolute inset-0 bg-perfume-gradient bg-perfume-paper bg-perfume-vignette" aria-hidden />
-      {/* Animated gradient sweep */}
-      <div
-        className="absolute inset-0 opacity-30 animate-gradient-x"
-        style={{
-          backgroundImage:
-            "linear-gradient(90deg, rgba(248,133,18,0.18), rgba(255,255,255,0.06), rgba(248,133,18,0.18))",
-          backgroundSize: "200% 100%",
-        }}
-        aria-hidden
-      />
-      {/* Big centered logo */}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
       <Image
         src="/logo.png"
         alt="Aroma Notes"
         width={512}
         height={512}
-        className="relative z-10 h-40 w-40 sm:h-56 sm:w-56 md:h-80 md:w-80 lg:h-96 lg:w-96"
+        className="h-40 w-40 sm:h-56 sm:w-56 md:h-72 md:w-72"
         priority
       />
     </div>
   );
 }
-
-

@@ -46,11 +46,11 @@ function Segmented({
   const text = accent === "amber" ? "text-amber-800" : "text-rose-800";
 
   return (
-    <div className={`rounded-2xl border border-gray-200/60 bg-white/70 backdrop-blur ring-1 ${ring} p-3 shadow-sm`}> 
+    <div className={`border border-gray-200/60 bg-white/70 backdrop-blur ring-1 ${ring} p-3 shadow-sm`}> 
       <div className="px-1 pb-2 text-xs font-semibold tracking-wide text-gray-700">{label}</div>
       <div ref={containerRef} className="relative flex gap-2">
         <span
-          className={`absolute top-0 bottom-0 my-auto h-9 ${bg} rounded-full transition-all duration-300 ease-out`}
+          className={`absolute top-0 bottom-0 my-auto h-9 ${bg} transition-all duration-300 ease-out`}
           style={{ left: `${indicator.left}px`, width: `${indicator.width}px`, opacity: indicator.opacity }}
         />
         {options.map((opt) => (
@@ -58,7 +58,7 @@ function Segmented({
             key={opt.key}
             ref={(el) => { btnRefs.current[opt.key] = el; }}
             onClick={() => onChange(opt.key)}
-            className={`relative z-10 inline-flex items-center justify-center rounded-full px-4 h-9 text-sm font-medium transition-all duration-300 ${
+            className={`relative z-10 inline-flex items-center justify-center  px-4 h-9 text-sm font-medium transition-all duration-300 ${
               value === opt.key ? `${text}` : "text-gray-700 hover:text-gray-900"
             }`}
           >
